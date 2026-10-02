@@ -1,0 +1,1766 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="arch-map-viewer" content="23">
+<title>アーキテクチャ図</title>
+<script>try { const t = localStorage.getItem('arch-map-theme'); if (t) document.documentElement.dataset.theme = t; } catch { /* 保存できない環境では OS の設定に従う */ }</script>
+<!-- arch-map スキルのテンプレートです。このファイルは編集しないでください（図の中身は arch-data.js）。
+     テンプレートを改修したら arch-map-viewer の番号を 1 つ上げる。次回の /arch-map で各プロジェクトのビューアが置き換わる。 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=M+PLUS+1+Code:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg-0:#0d0c18;
+  --bg-1:#12111f;
+  --bg-2:#181628;
+  --bg-3:#201d35;
+  --bd:#28253d;
+  --bd-2:#3b3656;
+  --wire:#625c82;
+  --text:#ebe8f4;
+  --text-2:#aca7c2;
+  --text-3:#8681a2;
+  --accent:#b597f6;
+  --on-accent:#160f2a;
+  --orange:#f2a65a;
+  --blue:#6f9cff;
+  --green:#5fd4a4;
+  --purple:#b597f6;
+  --cyan:#5ccbd8;
+  --pink:#f285b4;
+  --gray:#a6a2bb;
+  --ok:#5fd4a4;
+  --run:#6f9cff;
+  --todo:#7f7a9a;
+  --extra:#ecd06a;
+  --bad:#ff6b6b;
+  --font:"JetBrains Mono", "M PLUS 1 Code", ui-monospace, "SF Mono", Menlo, "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
+  --haze-1:rgba(181,151,246,.12);
+  --haze-2:rgba(111,156,255,.07);
+  --glow-accent:rgba(181,151,246,.5);
+  --glow-arg:rgba(242,166,90,.25);
+  --sf-top:rgba(13,12,24,.6);
+  --sf-tabs:rgba(18,17,31,.6);
+  --tab-on:rgba(181,151,246,.14);
+  --sf-insp:rgba(18,17,31,.82);
+  --sf-canvas:rgba(18,17,31,.35);
+  --dot:rgba(172,167,194,.14);
+  --sf-hud:rgba(18,17,31,.9);
+  --sf-status:rgba(13,12,24,.92);
+  --glow-text:30%;
+  --glow-edge:60%;
+  --glow-meter:40%;
+  --glow-line:100%;
+  --glow-node:100%;
+  --node-tint:9%;
+  --grain:none;
+  --gap-y:40px;
+  color-scheme:dark;
+}
+/* ライトモード（生成り紙のようなベージュ）: 切替ボタンで選んだとき、または未選択で OS がライトのとき */
+:root[data-theme="light"]{
+  --bg-0:#f9f6f0;
+  --bg-1:#fefcf9;
+  --bg-2:#f2ede3;
+  --bg-3:#e9e2d5;
+  --bd:#e6dfd1;
+  --bd-2:#d2c8b4;
+  --wire:#a69c89;
+  --text:#2a251f;
+  --text-2:#564e43;
+  --text-3:#6f6554;
+  --accent:#9c4a26;
+  --on-accent:#fefcf9;
+  --orange:#9c5420;
+  --blue:#3c6584;
+  --green:#526d33;
+  --purple:#73558a;
+  --cyan:#356f6c;
+  --pink:#a24c66;
+  --gray:#6f6759;
+  --ok:#526d33;
+  --run:#3c6584;
+  --todo:#9a907d;
+  --extra:#a07a12;
+  --bad:#ad3a2c;
+  --haze-1:rgba(156,74,38,.05);
+  --haze-2:rgba(82,109,51,.04);
+  --glow-accent:transparent;
+  --glow-arg:transparent;
+  --sf-top:rgba(249,246,240,.94);
+  --sf-tabs:rgba(254,252,249,.92);
+  --tab-on:rgba(156,74,38,.1);
+  --sf-insp:rgba(254,252,249,.96);
+  --sf-canvas:rgba(254,252,249,.5);
+  --dot:rgba(104,84,54,.2);
+  --sf-hud:rgba(254,252,249,.97);
+  --sf-status:rgba(242,237,227,.97);
+  --glow-text:0%;
+  --glow-edge:0%;
+  --glow-meter:0%;
+  --glow-line:0%;
+  --glow-node:0%;
+  --node-tint:4%;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .28 0 0 0 0 .17 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg-0:#f9f6f0;
+    --bg-1:#fefcf9;
+    --bg-2:#f2ede3;
+    --bg-3:#e9e2d5;
+    --bd:#e6dfd1;
+    --bd-2:#d2c8b4;
+    --wire:#a69c89;
+    --text:#2a251f;
+    --text-2:#564e43;
+    --text-3:#6f6554;
+    --accent:#9c4a26;
+    --on-accent:#fefcf9;
+    --orange:#9c5420;
+    --blue:#3c6584;
+    --green:#526d33;
+    --purple:#73558a;
+    --cyan:#356f6c;
+    --pink:#a24c66;
+    --gray:#6f6759;
+    --ok:#526d33;
+    --run:#3c6584;
+    --todo:#9a907d;
+    --extra:#a07a12;
+    --bad:#ad3a2c;
+    --haze-1:rgba(156,74,38,.05);
+    --haze-2:rgba(82,109,51,.04);
+    --glow-accent:transparent;
+    --glow-arg:transparent;
+    --sf-top:rgba(249,246,240,.94);
+    --sf-tabs:rgba(254,252,249,.92);
+    --tab-on:rgba(156,74,38,.1);
+    --sf-insp:rgba(254,252,249,.96);
+    --sf-canvas:rgba(254,252,249,.5);
+    --dot:rgba(104,84,54,.2);
+    --sf-hud:rgba(254,252,249,.97);
+    --sf-status:rgba(242,237,227,.97);
+    --glow-text:0%;
+    --glow-edge:0%;
+    --glow-meter:0%;
+    --glow-line:0%;
+    --glow-node:0%;
+    --node-tint:4%;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .28 0 0 0 0 .17 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color-scheme:light;
+  }
+}
+*{box-sizing:border-box}
+html{height:100%;background:var(--bg-0)}
+body{margin:0;height:100%;color:var(--text);font-family:var(--font);font-size:13px;line-height:1.6;
+  background:var(--grain),radial-gradient(1100px 560px at 82% -12%,var(--haze-1),transparent 62%),radial-gradient(900px 520px at -5% 8%,var(--haze-2),transparent 60%),var(--bg-0);background-attachment:fixed}
+button{font:inherit;color:inherit}
+code,kbd{font:inherit}
+.app{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh}
+:is(.tab,.node,.go,.back,.hud button,.icon,.ttl):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* ── top bar（1 段にまとめる） ── */
+.top{display:flex;align-items:center;gap:16px;min-height:52px;padding:4px 16px;background:var(--sf-top);border-bottom:1px solid var(--bd-2)}
+.brand{display:flex;align-items:center;gap:8px;flex:none;font-size:12px;color:var(--text-2)}
+.brand .glyph{color:var(--accent);text-shadow:0 0 6px var(--glow-accent)}
+.brand b{color:var(--text)}
+.brand .sep,.meta .sep{color:var(--text-3)}
+.meta{flex:none;font-size:12px;color:var(--text-2)}
+.meta .sep{margin:0 8px}
+.cmd{flex:1;min-width:0;margin:0;padding-left:16px;font-size:14px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:1px solid var(--bd)}
+.cmd .ps1{color:var(--accent);font-weight:700;text-shadow:0 0 8px var(--glow-accent)}
+.cmd .bin{font-weight:700}
+.cmd .flag{color:var(--text-2)}
+.cmd .arg{color:var(--orange);text-shadow:0 0 8px var(--glow-arg)}
+.cmd .cmt{margin-left:12px;color:var(--text-3)}
+.cursor{display:inline-block;width:8px;height:16px;margin-left:4px;vertical-align:-3px;background:var(--accent);box-shadow:0 0 6px var(--glow-accent);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{display:inline-flex;flex:none;gap:2px;padding:3px;border:1px solid var(--bd-2);border-radius:6px;background:var(--sf-tabs)}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;color:var(--text-2);background:transparent;border:0;border-radius:3px;cursor:pointer;transition:color .15s ease-out,background-color .15s ease-out}
+.tab:hover{color:var(--text);background:var(--bg-2)}
+.tab kbd,.tab .cnt{color:var(--text-3);font-size:12px}
+.tab[aria-selected="true"]{color:var(--text);font-weight:700;background:var(--tab-on);box-shadow:inset 0 -2px 0 var(--accent)}
+.legend{display:contents}
+.lg{display:inline-flex;align-items:center;gap:8px}
+.bar{display:inline-block;flex:none;width:12px;height:4px;border-radius:2px;background:var(--c)}
+.dots{display:inline-block;flex:none;width:14px;height:0;border-top:2px dotted var(--text-2)}
+
+/* ── body: キャンバス + 右パネル ── */
+.body{display:grid;grid-template-columns:minmax(0,1fr) 340px;min-height:0}
+.app.insp-off .body{grid-template-columns:minmax(0,1fr)}
+.app.insp-off .pane-insp{display:none}
+.pane-h{display:flex;align-items:center;gap:12px;min-height:32px;font-size:12px;color:var(--text-2)}
+.pane-h .t{color:var(--text);font-weight:700;letter-spacing:.06em}
+.pane-h .t::before{content:"▍";margin-right:4px;color:var(--accent)}
+.pane-h .rule{flex:1;height:0;border-top:1px solid var(--bd)}
+.pane-stage{position:relative;min-width:0;min-height:0}
+.pane-insp{display:flex;min-width:0;min-height:0}
+.insp{--pc:var(--accent);flex:1;min-height:0;overflow:auto;padding:8px 16px 24px;background:var(--sf-insp);border-left:1px solid var(--pc);box-shadow:-16px 0 32px -28px color-mix(in srgb,var(--pc) var(--glow-node),transparent);scrollbar-width:thin;scrollbar-color:var(--bd-2) transparent;transition:border-color .2s ease-out,box-shadow .2s ease-out}
+.icon{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:32px;min-height:32px;padding:0 8px;font-size:12px;color:var(--text-2);background:none;border:1px solid var(--bd-2);border-radius:3px;cursor:pointer;transition:color .15s ease-out,border-color .15s ease-out}
+.icon:hover{color:var(--text);border-color:var(--pc,var(--accent))}
+.top .icon{min-height:36px}
+
+/* ── stage: 動かせるキャンバス ── */
+.stage{position:absolute;inset:0;overflow:auto;cursor:grab;scrollbar-width:thin;scrollbar-color:var(--bd-2) transparent;
+  background-color:var(--sf-canvas);background-image:radial-gradient(circle at 1px 1px,var(--dot) 1px,transparent 0);background-size:16px 16px;background-attachment:local}
+.stage.panning,.stage.panning .node{cursor:grabbing}
+.stage.space .node{cursor:grab}
+.sizer{position:relative}
+.canvas{position:absolute;top:0;left:0;width:max-content;padding:112px 32px 72px;transform-origin:0 0}
+.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+.rows{position:relative;z-index:1;display:flex;flex-direction:column;gap:var(--gap-y)}
+.hud{position:absolute;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 12px;font-size:12px;color:var(--text-2);background:var(--sf-hud);border:1px solid var(--bd-2);border-radius:6px}
+.hud-tl{top:12px;left:12px;max-width:calc(100% - 200px)}
+.hud .stat{color:var(--text);font-weight:700}
+.hud button{min-width:36px;min-height:36px;padding:0 8px;font-size:12px;color:var(--text-2);background:none;border:0;border-radius:3px;cursor:pointer;transition:color .15s ease-out,background-color .15s ease-out}
+.hud button:hover{color:var(--text);background:var(--bg-3)}
+.zoom{right:12px;bottom:12px;gap:2px;padding:4px}
+.zoom .zv{min-width:56px}
+.insp-open{top:12px;right:12px;display:none;padding:0}
+.app.insp-off .insp-open{display:flex}
+.row{display:flex;justify-content:center;align-items:stretch;gap:24px}
+.grp{display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px;border:1px solid color-mix(in srgb,var(--c) 18%,transparent);border-left:2px solid var(--c);border-radius:0 6px 6px 0;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,transparent),color-mix(in srgb,var(--c) 3%,transparent) 45%,transparent)}
+.grp-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;max-width:calc(var(--cols) * 216px);color:var(--text-2);font-size:12px;line-height:1.5}
+.grp-h .idx{color:var(--c);font-size:11px;letter-spacing:.1em;opacity:.75}
+.grp-h b{color:var(--c);font-size:13px}
+/* 流れの図（縦）: 枠が縦の列になり、箱は起きる順（step）に上から下へ並ぶ */
+.rows.flow{display:grid;column-gap:56px;row-gap:0;align-items:start;justify-items:center;padding-top:52px}
+.rows.flow .grp.lane{display:block;align-self:stretch;justify-self:stretch;margin:-52px -20px -24px;padding:10px 16px;z-index:0}
+.rows.flow .lane .grp-h{display:-webkit-box;width:0;min-width:100%;max-width:none;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.rows.flow .lane .grp-h > *{margin-right:8px}
+.rows.flow .cell{display:flex;gap:16px;z-index:1}
+/* 流れの図（横）: 枠が横の帯になり、箱は起きる順に左から右へ並ぶ。帯の見出しは左端 */
+.rows.flow.h{column-gap:0;row-gap:48px;align-items:center;justify-items:start;padding:16px 0 16px 176px}
+.rows.flow.h .grp.lane{margin:-16px -24px -16px -176px;padding:12px 16px}
+.rows.flow.h .lane .grp-h{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:136px;min-width:0}
+.rows.flow.h .lane .grp-h > span:last-child:not(.idx){display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:4}
+.rows.flow.h .cell{flex-direction:column}
+.rows.flow.h .cell .node{flex:none;width:200px}
+/* 実装用の道具: 流れの図の後ろ（縦の流れでは下、横の流れでは右端）に分けて置く区画 */
+.tools{display:flex;flex-direction:column;gap:12px;justify-self:stretch;margin-top:40px;padding-top:16px;border-top:1px dashed var(--bd-2);z-index:1}
+.rows.flow .tools{grid-column:1 / -1}
+.rows.flow.h .tools{grid-column:auto;align-self:stretch;width:min-content;margin:0 0 0 16px;padding:0 0 0 24px;border-top:0;border-left:1px dashed var(--bd-2)}
+.tools-h{margin:0;color:var(--text-2);font-size:12px}
+.tools-h b{color:var(--text)}
+.tools-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:24px}
+.rows.flow.h .tools-row{flex-direction:column;align-items:stretch}
+.rows.flow.h .tools .node{flex:none;width:200px}
+.grp.tool{border-style:dashed;background:none}
+.node .tool-b{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;line-height:1.7;color:var(--text-2);border:1px dashed var(--bd-2);border-radius:3px}
+.grp-nodes{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:var(--gap-y) 16px;max-width:calc(var(--cols) * 200px + (var(--cols) - 1) * 16px)}
+
+/* ── node: 光る細い枠 + 角のカギ括弧 ── */
+.node{position:relative;flex:0 0 200px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 14px 12px;text-align:left;color:var(--text);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) var(--node-tint),transparent),transparent 55%),var(--bg-1);
+  border:1px solid color-mix(in srgb,var(--c) 42%,transparent);border-radius:2px;box-shadow:0 0 16px -12px color-mix(in srgb,var(--c) var(--glow-node),transparent);cursor:pointer;
+  transition:opacity .2s ease-out,border-color .15s ease-out,background-color .15s ease-out,box-shadow .2s ease-out}
+.node::before,.node::after{content:"";position:absolute;width:12px;height:12px;pointer-events:none;border:2px solid var(--c);filter:drop-shadow(0 0 2px color-mix(in srgb,var(--c) var(--glow-edge),transparent))}
+.node::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.node::after{right:-1px;bottom:-1px;border-left:0;border-top:0}
+.node:hover{border-color:color-mix(in srgb,var(--c) 75%,transparent);box-shadow:0 0 20px -12px color-mix(in srgb,var(--c) var(--glow-node),transparent)}
+.node.sel{border-color:var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 18%,transparent),color-mix(in srgb,var(--c) 5%,transparent)),var(--bg-1);box-shadow:0 0 0 1px var(--c),0 0 24px -10px color-mix(in srgb,var(--c) var(--glow-node),transparent)}
+.node.dim{opacity:.28}
+.node .nm{color:var(--c);font-size:14px;font-weight:700;line-height:1.4;letter-spacing:.03em;text-shadow:0 0 8px color-mix(in srgb,var(--c) var(--glow-text),transparent)}
+.node .tc{color:var(--text-3);font-size:12px}
+.node .out{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;font-weight:700;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid var(--c);border-radius:3px}
+.node .svc{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:3px}
+.node .rl{margin-top:4px;line-height:1.5}
+.node .ft{display:flex;flex-direction:column;gap:8px;align-self:stretch;margin-top:auto;padding-top:12px}
+.node .st{color:var(--text-2);font-size:12px}
+.node.actor{border-radius:24px;background:var(--bg-1)}
+.node.actor::before,.node.actor::after{content:none}
+.node.actor .ft{display:none}
+.node.s-todo{background:var(--bg-1);border-style:dashed;box-shadow:none}
+.node.s-todo::before,.node.s-todo::after{filter:none;opacity:.6}
+.node.s-todo .nm{text-shadow:none}
+.node.bad{background:linear-gradient(180deg,color-mix(in srgb,var(--bad) 12%,transparent),color-mix(in srgb,var(--bad) 4%,transparent)),var(--bg-1);border-color:var(--bad);box-shadow:0 0 0 1px color-mix(in srgb,var(--bad) 40%,transparent),0 0 22px -8px color-mix(in srgb,var(--bad) calc(var(--glow-node) * .6),transparent)}
+.bad-t{color:var(--bad)}
+.mw{display:block;align-self:stretch;filter:drop-shadow(0 0 2px color-mix(in srgb,var(--c) var(--glow-meter),transparent))}
+.meter{--p:0%;display:block;height:6px;background:linear-gradient(90deg,var(--c) 0 var(--p),color-mix(in srgb,var(--c) 16%,transparent) var(--p));-webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 2px),transparent calc(10% - 2px) 10%);mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 2px),transparent calc(10% - 2px) 10%)}
+
+/* ── wires ── */
+.wire{transition:opacity .2s ease-out}
+.wire path{fill:none;stroke:var(--wc,var(--wire));stroke-width:1.25}
+.wire polygon,.wire circle{fill:var(--wc,var(--wire))}
+.wire.k-todo{--wc:var(--todo)}
+.wire.k-todo path{stroke-dasharray:4 4}
+.wire.k-extra{--wc:var(--extra)}
+/* 結果が返る・出力される流れ: 点線と白抜きの矢印 */
+.wire.res path{stroke-dasharray:1.5 3.5;stroke-linecap:round}
+.wire.res polygon{fill:var(--bg-1);stroke:var(--wc,var(--wire));stroke-width:1.25}
+.wire.dim{opacity:.14}
+.wire.on{--wc:var(--hc);filter:drop-shadow(0 0 2px color-mix(in srgb,var(--hc) var(--glow-line),transparent))}
+.wire.on path{stroke-width:1.75;stroke-dasharray:6 4;animation:flow .9s linear infinite}
+.wire.on.res path{stroke-dasharray:1.5 3.5}
+/* 実装用の道具につながる線: 一点鎖線 */
+.wire.tool path,.wire.on.tool path{stroke-dasharray:8 3 2 3}
+/* 道具の線はふだん薄く、道具かつながる先を選んだときだけはっきり出す（本番の流れを読みやすく） */
+.wire.tool{opacity:.18}
+.wire.tool.on{opacity:1}
+@keyframes flow{to{stroke-dashoffset:-10}}
+.wl{position:absolute;transform:translate(-50%,-50%);padding:0 8px;font-size:12px;white-space:nowrap;color:var(--hc);background:var(--bg-1);border:1px solid color-mix(in srgb,var(--hc) 50%,transparent);opacity:0;transition:opacity .15s ease-out}
+.wl.on{opacity:1}
+
+/* ── inspector ── */
+.insp .pane-h{margin-bottom:12px}
+.crumb{margin:0;color:var(--text-3);font-size:12px}
+.crumb span{margin:0 4px}
+.insp h2{margin:4px 0 0;color:var(--pc);font-size:17px;font-weight:700;line-height:1.4;letter-spacing:.04em;text-shadow:0 0 8px color-mix(in srgb,var(--pc) var(--glow-text),transparent)}
+/* 見出しはクリックで書き換えられる */
+.ttl{padding:10px 0;margin:-10px 0;font:inherit;color:inherit;letter-spacing:inherit;text-shadow:inherit;text-align:left;background:none;border:0;cursor:text}
+.ttl .pen{margin-left:8px;font-size:12px;font-weight:400;color:var(--text-3);text-shadow:none;transition:color .15s ease-out}
+.ttl:hover .pen{color:var(--pc)}
+.ttl-in{width:100%;padding:4px 8px;font:inherit;color:inherit;letter-spacing:inherit;background:var(--bg-1);border:1px solid var(--pc);border-radius:3px;outline:none}
+.hint{margin:4px 0 0;color:var(--text-3);font-size:12px}
+.savebar{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;padding:4px 4px 4px 12px;font-size:12px;color:var(--text);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);border-radius:3px;background:color-mix(in srgb,var(--c) 8%,transparent);--c:var(--run)}
+.savebar[hidden]{display:none}
+.savebar.ok{--c:var(--ok)}
+.savebar.bad{--c:var(--bad)}
+.savebar span{flex:1}
+.icon.primary{color:var(--bg-1);font-weight:700;background:var(--accent);border-color:var(--accent)}
+.icon.primary:hover{color:var(--bg-1);border-color:var(--accent)}
+.icon.primary:disabled{opacity:.5;cursor:default}
+.lead{margin:8px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:0 8px;font-size:12px;color:var(--text-2);border:1px solid var(--bd-2);border-radius:3px}
+.ps{margin-top:20px}
+.ps h3{margin:0 0 6px;color:var(--text);font-size:12px;font-weight:700}
+.ps h3 .hash{color:var(--pc)}
+.ps p{margin:0;color:var(--text-2)}
+.quote{margin:0;padding:4px 0 4px 12px;color:var(--pc);font-weight:500;border-left:2px solid var(--pc)}
+.ls{margin:0;padding:0;list-style:none}
+.ls li{position:relative;padding-left:16px;color:var(--text-2)}
+.ls li+li{margin-top:4px}
+.ls li::before{content:"›";position:absolute;left:2px;color:var(--text-3)}
+.conn li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;padding:0}
+.conn li::before{content:none}
+.conn .dir{color:var(--text-3);font-size:12px;line-height:1.9}
+.conn .lbl{display:block;color:var(--text-3);font-size:12px}
+.go{padding:0;color:var(--pc);background:none;border:0;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent)}
+.go:hover{text-decoration-color:currentColor}
+.files code{color:var(--text-2);font-size:12px;word-break:break-all}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.stats div{padding:8px;border:1px solid color-mix(in srgb,var(--c) 30%,transparent);border-radius:3px;background:color-mix(in srgb,var(--c) 6%,transparent)}
+.stats b{display:block;font-size:20px;line-height:1.2;color:var(--c);text-shadow:0 0 8px color-mix(in srgb,var(--c) var(--glow-text),transparent)}
+.stats span{color:var(--text-2);font-size:11px}
+.meter-big{--c:var(--ok)}
+.meter-big .meter{height:8px}
+.kv{display:grid;grid-template-columns:88px minmax(0,1fr);gap:4px 8px;margin:0}
+.kv dt{color:var(--text-3);font-size:12px;line-height:1.9}
+.kv dd{margin:0;color:var(--text-2);word-break:break-all}
+.kv code{color:var(--text);font-size:12px}
+.gl{margin:0}
+.gl dt{color:var(--text);font-weight:700}
+.gl dd{margin:0 0 8px;color:var(--text-2)}
+.cmds{margin:0;padding:0;list-style:none}
+.cmds li+li{margin-top:8px}
+.cmds code{color:var(--accent)}
+.cmds span{display:block;color:var(--text-2);font-size:12px}
+.back{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin-top:24px;color:var(--text-2);background:none;border:1px solid var(--bd-2);border-radius:3px;cursor:pointer;transition:color .15s ease-out,border-color .15s ease-out}
+.back:hover{color:var(--text);border-color:var(--pc)}
+kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);border-radius:3px}
+.tab kbd{padding:0;border:0}
+
+/* ── log（右パネルのガイド内） ── */
+.tl{margin:0;padding:0;list-style:none}
+.tl li{position:relative;padding:0 0 8px 20px}
+.tl li::before{content:"";position:absolute;left:3px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 4px var(--c)}
+.tl li+li::after{content:"";position:absolute;left:6px;top:-16px;height:24px;border-left:1px solid var(--bd-2)}
+.tl .when{display:flex;gap:8px;font-size:12px}
+.tl time{color:var(--text-3)}
+.tl .tag{color:var(--c);font-weight:700}
+.tl .tx{display:block;color:var(--text-2)}
+.muted{margin:0;color:var(--text-2)}
+
+/* ── status bar ── */
+.statusbar{display:flex;align-items:stretch;gap:16px;min-height:28px;font-size:12px;color:var(--text-2);background:var(--sf-status);border-top:1px solid var(--bd-2)}
+.statusbar .mode{display:flex;align-items:center;flex:none;white-space:nowrap;padding:0 16px;color:var(--on-accent);background:var(--accent);font-weight:700;letter-spacing:.08em}
+.statusbar .keys{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+.statusbar .upd{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto;padding-right:16px;white-space:nowrap}
+.statusbar code{color:var(--accent)}
+
+/* ── empty ── */
+.empty{width:min(560px,80vw);padding:48px 24px;text-align:center;color:var(--text-2);border:1px dashed var(--bd-2);background:var(--bg-1)}
+.empty p{margin:0}
+.empty p+p{margin-top:8px}
+.empty .em-t{color:var(--text);font-weight:700}
+.empty code{color:var(--accent)}
+
+@media (max-width:1180px){
+  .meta{display:none}
+}
+@media (max-width:960px){
+  .app{display:block;height:auto}
+  .top{flex-wrap:wrap;padding:8px 16px}
+  .cmd{order:5;flex-basis:100%;padding-left:0;white-space:normal;border-left:0}
+  .body,.app.insp-off .body{display:block}
+  .app.insp-off .pane-insp{display:flex}
+  .pane-stage{display:flex;flex-direction:column;height:70vh;height:70dvh}
+  .stage{position:relative;inset:auto;flex:1;min-height:0}
+  .hud-tl{position:static;order:-1;max-width:none;border-width:0 0 1px;border-radius:0}
+  .insp{border-left:0;border-top:1px solid var(--pc)}
+  .insp-open,#insp-close{display:none!important}
+  .statusbar{position:sticky;bottom:0;z-index:20}
+  .statusbar .keys{display:none}
+}
+@media (max-width:640px){
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+/* PNG 書き出し中は色や透明度の切り替えアニメーションを止め、最終的な見た目を読み取る */
+.no-anim *{transition:none!important;animation:none!important}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><span class="glyph">◆</span><b>arch-map</b><span class="sep">›</span><span id="path"></span></div>
+    <p class="cmd" id="cmd"></p>
+    <div class="tabs" id="tabs" role="tablist" aria-label="表示の切り替え"></div>
+    <button type="button" class="icon" id="theme"></button>
+    <div class="meta" id="meta"></div>
+  </header>
+  <main class="body">
+    <section class="pane-stage" aria-label="アーキテクチャ図">
+      <div class="stage" id="stage">
+        <div class="sizer" id="sizer">
+          <div class="canvas" id="canvas">
+            <svg class="wires" id="wires" aria-hidden="true"></svg>
+            <div class="labels" id="labels" aria-hidden="true"></div>
+            <div class="rows" id="rows"></div>
+          </div>
+        </div>
+      </div>
+      <div class="hud hud-tl"><span class="stat" id="stat"></span><span class="legend" id="legend"></span></div>
+      <button type="button" class="hud insp-open" id="insp-open"><span>« 詳細パネル</span></button>
+      <div class="hud zoom" id="zoom" role="group" aria-label="拡大と縮小">
+        <button type="button" data-zoom="dir" id="dir"></button>
+        <button type="button" data-zoom="home">初期表示</button>
+        <button type="button" data-zoom="out" aria-label="縮小">−</button>
+        <button type="button" class="zv" data-zoom="reset" id="zoom-v" aria-label="100% にもどす">100%</button>
+        <button type="button" data-zoom="in" aria-label="拡大">＋</button>
+        <button type="button" data-zoom="fit">全体</button>
+        <button type="button" data-zoom="full" id="fs">全画面</button>
+        <button type="button" data-zoom="png">PNG 保存</button>
+      </div>
+    </section>
+    <aside class="pane-insp" id="insp">
+      <div class="insp">
+        <div class="pane-h"><span class="t" id="insp-t">ガイド</span><i class="rule"></i><span id="insp-k"></span><button type="button" class="icon" id="insp-close" aria-label="パネルを閉じる">»</button></div>
+        <div class="savebar" id="savebar" role="status" hidden><span id="save-t"></span><button type="button" class="icon primary" id="save">保存</button></div>
+        <div class="insp-b" id="panel" aria-live="polite"></div>
+      </div>
+    </aside>
+  </main>
+  <footer class="statusbar">
+    <span class="mode" id="mode">ARCH</span>
+    <span class="keys"><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 表示</span><span><kbd>esc</kbd> ガイド</span><span><kbd>space</kbd>+<kbd>ドラッグ</kbd> 移動</span><span><kbd>ctrl</kbd>+<kbd>ホイール</kbd> 拡大縮小</span><span><kbd>h</kbd> 初期表示</span><span><kbd>f</kbd> 全体</span><span><kbd>r</kbd> 向き</span><span><kbd>i</kbd> パネル</span><span><kbd>t</kbd> テーマ</span><span><kbd>p</kbd> PNG 保存</span></span>
+    <span class="upd">図を最新にする <code>/arch-map</code></span>
+  </footer>
+</div>
+<script src="arch-data.js"></script>
+<script>
+(() => {
+  'use strict';
+  const D = window.ARCH_MAP;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = {
+    path: $('#path'), meta: $('#meta'), cmd: $('#cmd'), tabs: $('#tabs'), legend: $('#legend'), stat: $('#stat'),
+    stage: $('#stage'), sizer: $('#sizer'), canvas: $('#canvas'), wires: $('#wires'), labels: $('#labels'), rows: $('#rows'),
+    zoom: $('#zoom'), zoomV: $('#zoom-v'), dir: $('#dir'),
+    insp: $('#insp'), inspT: $('#insp-t'), inspK: $('#insp-k'), panel: $('#panel'),
+    app: $('#app'), inspOpen: $('#insp-open'), inspClose: $('#insp-close'), fs: $('#fs'), theme: $('#theme'), mode: $('#mode'),
+    savebar: $('#savebar'), saveT: $('#save-t'), save: $('#save'),
+  };
+
+  const curTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  function paintThemeButton() {
+    const dark = curTheme() === 'dark';
+    const hint = dark ? 'いまはダークモード。クリックでライトに切り替え' : 'いまはライトモード。クリックでダークに切り替え';
+    els.theme.textContent = dark ? '☾ ダーク' : '☀ ライト';
+    els.theme.title = hint;
+    els.theme.setAttribute('aria-label', hint);
+  }
+  function toggleTheme() {
+    const next = curTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('arch-map-theme', next); } catch { /* 保存できなくても今回の表示は切り替わる */ }
+    paintThemeButton();
+  }
+  paintThemeButton();
+  els.theme.addEventListener('click', toggleTheme);
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', paintThemeButton);
+
+  if (!D || typeof D !== 'object') {
+    els.cmd.innerHTML = '<span class="ps1">❯</span> <span class="bin">arch-map</span><span class="cmt"># データが見つかりません</span><span class="cursor" aria-hidden="true"></span>';
+    els.rows.innerHTML = '<div class="empty"><p class="em-t">✕ arch-data.js を読み込めませんでした</p>'
+      + '<p>この index.html と同じフォルダに <code>arch-data.js</code> があるか確認してください。</p>'
+      + '<p>Claude Code で <code>/arch-map</code> を実行すると作成されます。</p></div>';
+    els.insp.hidden = true;
+    els.zoom.hidden = true;
+    els.sizer.style.width = `${els.canvas.offsetWidth}px`;
+    els.sizer.style.height = `${els.canvas.offsetHeight}px`;
+    return;
+  }
+
+  const COLORS = new Set(['orange', 'blue', 'green', 'purple', 'cyan', 'pink', 'gray']);
+  const VIEWS = [
+    { id: 'plan', label: '計画', key: '1', desc: 'これから作るもの' },
+    { id: 'built', label: '実装', key: '2', desc: 'いま作ってあるもの' },
+    { id: 'diff', label: '比較', key: '3', desc: '計画と実装のちがい' },
+  ];
+  const STATUS = {
+    done: { label: '完成', mark: '✓', color: 'var(--ok)' },
+    wip: { label: '作業中', mark: '⠋', color: 'var(--run)' },
+    todo: { label: '未着手', mark: '◇', color: 'var(--todo)' },
+    extra: { label: '計画外', mark: '＋', color: 'var(--extra)' },
+  };
+  const LOG_TAG = { plan: ['計画', 'var(--purple)'], built: ['実装', 'var(--green)'], both: ['両方', 'var(--blue)'] };
+  const SPIN = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+  const project = D.project || {};
+  // groups = 実際のまとまり（動く場所・デプロイ単位・部品など）。旧形式の layers / layer も読める
+  const groups = Array.isArray(D.groups) ? D.groups : Array.isArray(D.layers) ? D.layers : [];
+  const groupById = new Map(groups.map((g) => [g.id, g]));
+  const gid = (n) => n.group ?? n.layer;
+  const nodes = (Array.isArray(D.nodes) ? D.nodes : []).filter((n) => groupById.has(gid(n)) && (n.actor || n.plan || n.built));
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  const edges = (Array.isArray(D.edges) ? D.edges : []).filter((e) => nodeById.has(e.from) && nodeById.has(e.to) && e.from !== e.to);
+  const glossary = Array.isArray(D.glossary) ? D.glossary : [];
+  const log = Array.isArray(D.log) ? D.log : [];
+
+  const clamp01 = (x) => Math.max(0, Math.min(1, Number(x) || 0));
+  const isTool = (n) => groupById.get(gid(n))?.tool === true;
+  const stepsOf = (n) => (Array.isArray(n.step) ? n.step : [n.step]).filter((x) => Number.isInteger(x) && x > 0);
+  const groupColor = (g) => `var(--${COLORS.has(g?.color) ? g.color : 'gray'})`;
+  const safeUrl = (u) => (typeof u === 'string' && /^https:\/\//.test(u) ? u : '');
+  const inView = (n, v) => (n.actor || v === 'diff' ? true : v === 'plan' ? !!n.plan : !!n.built);
+  const edgeInView = (e, v) => inView(nodeById.get(e.from), v) && inView(nodeById.get(e.to), v)
+    && !(v === 'plan' && e.only === 'built') && !(v === 'built' && e.only === 'plan');
+  const progressOf = (n) => (n.built ? clamp01(n.built.progress ?? 1) : 0);
+  const statusOf = (n) => (n.actor ? 'actor' : !n.built ? 'todo' : !n.plan ? 'extra' : progressOf(n) >= 1 ? 'done' : 'wip');
+  const changed = (n) => !!(n.plan?.tech && n.built?.tech && n.plan.tech !== n.built.tech);
+  const techOf = (n, v) => (v === 'plan' ? n.plan?.tech : n.built?.tech ?? n.plan?.tech) || '';
+  const hasIssue = (n, v) => v !== 'plan' && !!n.built?.issue;
+  const nodeColor = (n, v) => (hasIssue(n, v) ? 'var(--bad)' : v === 'diff' && !n.actor ? STATUS[statusOf(n)].color : groupColor(groupById.get(gid(n))));
+  const countIn = (v) => nodes.filter((n) => !n.actor && inView(n, v)).length;
+  const meter = (p, extra = '') => `<span class="mw${extra}"><span class="meter" style="--p:${p}%"></span></span>`;
+  const sec = (title, body) => `<section class="ps"><h3><span class="hash">#</span> ${title}</h3>${body}</section>`;
+
+  const state = { view: 'diff', sel: null };
+  const cam = { z: 1, touched: false, padX: 0, padY: 0 };
+  // 流れの向き。選んだことがなければ、横長の画面は左から右、縦長の画面は上から下
+  let horiz = els.stage.clientWidth >= els.stage.clientHeight;
+  try { const d = localStorage.getItem('arch-map-dir'); if (d === 'h' || d === 'v') horiz = d === 'h'; } catch { /* 読めなければ画面の形で決める */ }
+  const flowH = () => els.rows.classList.contains('h');
+  let visEdges = [];
+
+  /* ── state & routing ── */
+  function readHash() {
+    const [v, id] = decodeURIComponent(location.hash.slice(1)).split('/');
+    const p = countIn('plan'), b = countIn('built');
+    state.view = VIEWS.some((x) => x.id === v) ? v : p && b ? 'diff' : b ? 'built' : 'plan';
+    state.sel = id && nodeById.has(id) && inView(nodeById.get(id), state.view) ? id : null;
+  }
+  function writeHash() {
+    const h = `#${state.view}${state.sel ? `/${state.sel}` : ''}`;
+    if (location.hash !== h) { try { history.replaceState(null, '', h); } catch { /* file:// で拒否される環境では URL を更新しない */ } }
+  }
+  function setView(v) {
+    if (state.view === v) return;
+    state.view = v;
+    if (state.sel && !inView(nodeById.get(state.sel), v)) state.sel = null;
+    renderAll();
+    fitView(false);
+  }
+  function setInsp(open) { els.app.classList.toggle('insp-off', !open); }
+  function select(id) {
+    state.sel = id && nodeById.has(id) && inView(nodeById.get(id), state.view) ? id : null;
+    if (state.sel) setInsp(true);
+    applyHighlight();
+    renderCmd();
+    renderPanel();
+    writeHash();
+    if (state.sel && matchMedia('(max-width: 960px)').matches) els.insp.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }
+  function go(id) {
+    const n = id && nodeById.get(id);
+    if (n && !inView(n, state.view)) setView('diff');
+    select(n ? id : null);
+    if (n) reveal(id);
+  }
+
+  /* ── header ── */
+  function renderCmd() {
+    const v = VIEWS.find((x) => x.id === state.view);
+    const n = state.sel && nodeById.get(state.sel);
+    els.cmd.innerHTML = '<span class="ps1">❯</span> <span class="bin">arch-map</span>'
+      + ` <span class="flag">--view</span> <span class="arg">${v.id}</span>`
+      + (n ? ` <span class="flag">--focus</span> <span class="arg">${esc(n.id)}</span>` : '')
+      + `<span class="cmt"># ${v.desc}${n ? ` › ${esc(n.name)}` : ''}</span><span class="cursor" aria-hidden="true"></span>`;
+    els.mode.textContent = v.label;
+  }
+  function renderHeader() {
+    const name = project.name || '無名のプロジェクト';
+    els.path.textContent = name;
+    document.title = `${name} · アーキテクチャ図`;
+    els.meta.innerHTML = [project.updated && `更新 ${esc(project.updated)}`, project.commit && `commit ${esc(project.commit)}`]
+      .filter(Boolean).join('<span class="sep">·</span>');
+    els.tabs.innerHTML = VIEWS.map((x) => `<button type="button" class="tab" role="tab" data-view="${x.id}" aria-selected="${x.id === state.view}">`
+      + `<kbd>${x.key}</kbd>${x.label}${x.id === 'diff' ? '' : `<span class="cnt">${countIn(x.id)}</span>`}</button>`).join('');
+    els.legend.innerHTML = state.view === 'diff'
+      ? Object.values(STATUS).map((s) => `<span class="lg" style="--c:${s.color}"><i class="bar"></i>${s.mark} ${s.label}</span>`).join('')
+        + '<span class="lg" style="--c:var(--bad)"><i class="bar"></i>✕ 要確認</span><span class="lg">△ 技術を変更</span>'
+      : groups.map((g) => `<span class="lg" style="--c:${groupColor(g)}"><i class="bar"></i>${esc(g.name)}</span>`).join('');
+    if (edges.some((e) => e.kind === 'result' && edgeInView(e, state.view))) els.legend.innerHTML += '<span class="lg"><i class="dots"></i>結果の流れ</span>';
+    if (nodes.some((n) => n.output && inView(n, state.view))) els.legend.innerHTML += '<span class="lg">⇥ 最後の出力</span>';
+    if (nodes.some((n) => isTool(n) && inView(n, state.view))) els.legend.innerHTML += '<span class="lg">⚒ 実装用の道具</span>';
+    renderCmd();
+  }
+
+  /* ── stage ── */
+  function statusText(n, v) {
+    if (hasIssue(n, v)) return '<span class="bad-t">✕ 要確認</span>';
+    if (v === 'plan') return '◇ 計画';
+    const p = Math.round(progressOf(n) * 100);
+    const spin = `<span class="spin">${SPIN[0]}</span> 作業中 ${p}%`;
+    if (v === 'built') return p < 100 ? spin : '✓ 完成';
+    const s = statusOf(n);
+    if (s === 'todo') return '◇ 未着手';
+    if (s === 'extra') return `＋ 計画外${p < 100 ? ` · ${p}%` : ''}`;
+    return `${s === 'wip' ? spin : '✓ 完成'}${changed(n) ? ' · △変更' : ''}`;
+  }
+  function nodeEl(n, v, step = 0) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'node';
+    b.dataset.id = n.id;
+    b.dataset.key = step ? `${n.id}@${step}` : n.id;
+    b.dataset.step = String(step);
+    if (v === 'diff') b.classList.add(`s-${statusOf(n)}`);
+    if (hasIssue(n, v)) b.classList.add('bad');
+    if (n.actor) b.classList.add('actor');
+    if (n.output) b.classList.add('output');
+    if (isTool(n)) b.classList.add('toolnode');
+    b.style.setProperty('--c', nodeColor(n, v));
+    const tech = techOf(n, v);
+    const bar = v !== 'plan' && n.built && !n.actor ? meter(Math.round(progressOf(n) * 100)) : '';
+    const svc = n.service?.name;
+    b.innerHTML = `<span class="nm">${esc(n.name)}</span>${n.output ? '<span class="out">⇥ 最後の出力</span>' : ''}${isTool(n) ? '<span class="tool-b">⚒ 実装用の道具</span>' : ''}${svc ? `<span class="svc">◈ ${esc(svc)}</span>` : ''}${tech && tech !== svc ? `<span class="tc">${esc(tech)}</span>` : ''}`
+      + `<span class="rl">${esc(n.role)}</span>${n.actor ? '' : `<span class="ft">${bar}<span class="st">${statusText(n, v)}</span></span>`}`;
+    return b;
+  }
+  function emptyHTML(v) {
+    const m = {
+      plan: ['◇ 計画はまだ描かれていません', '/arch-map plan', 'これから作るものの図を描けます'],
+      built: ['◇ まだ実装された箱はありません', '/arch-map built', 'できあがった部分をコードから読み取って図にします'],
+      diff: ['◇ まだ何もありません', '/arch-map', '計画と実装を読み取って図にします'],
+    }[v];
+    return `<div class="empty"><p class="em-t">${m[0]}</p><p>Claude Code で <code>${m[1]}</code> を実行すると、${m[2]}。</p></div>`;
+  }
+  function renderStage() {
+    const v = state.view;
+    const vis = nodes.filter((n) => inView(n, v));
+    visEdges = edges.filter((e) => edgeInView(e, v));
+    els.rows.innerHTML = '';
+    els.rows.className = 'rows';
+    els.rows.removeAttribute('style');
+    if (!vis.some((n) => !n.actor)) {
+      visEdges = [];
+      els.dir.hidden = true;
+      els.stat.textContent = '';
+      els.rows.innerHTML = emptyHTML(v);
+      drawWires();
+      return;
+    }
+    const toolN = vis.filter(isTool).length;
+    els.stat.textContent = `箱 ${vis.filter((n) => !n.actor && !isTool(n)).length}${toolN ? ` · 道具 ${toolN}` : ''} · 線 ${visEdges.length}`;
+    const flow = vis.filter((n) => !isTool(n)).every((n) => stepsOf(n).length);
+    els.dir.hidden = !flow;
+    if (flow) renderFlow(vis, v);
+    else renderTiers(vis, v);
+    drawWires();
+  }
+  // 流れの図: グループを流れに沿った帯（縦の流れでは列、横の流れでは行）にして並べ、箱を起きる順（step）の段に置く。
+  // step が複数の箱は各段に出る
+  function renderFlow(vis, v) {
+    const core = vis.filter((n) => !isTool(n));
+    const used = [...new Set(core.flatMap(stepsOf))].sort((a, b) => a - b);
+    // 段の間には、それぞれ幅を変えられる間隔のトラックを挟む（段 i は 2i+1 番目のトラック）
+    const posOf = new Map(used.map((st, i) => [st, 2 * i + 1]));
+    const lanes = groups.filter((g) => !g.tool && core.some((n) => gid(n) === g.id));
+    const tools = toolSection(vis, v);
+    els.rows.classList.add('flow');
+    els.rows.classList.toggle('h', horiz);
+    const steps = used.map((_, i) => (i < used.length - 1 ? `auto var(--g${i}, 32px)` : 'auto')).join(' ');
+    const lanesT = horiz ? `repeat(${lanes.length}, auto)` : `repeat(${lanes.length}, max-content)`;
+    // 横の流れでは、右端の道具の区画の手前にも間隔のトラックを置く（道具へ向かう線のラベルを収める）
+    const toolPos = horiz && tools ? used.length * 2 + 1 : used.length * 2;
+    els.rows.style.gridTemplateColumns = horiz ? `${steps}${tools ? ` var(--g${used.length - 1}, 32px) auto` : ''}` : lanesT;
+    els.rows.style.gridTemplateRows = horiz ? lanesT : `${steps} auto`;
+    // along = 流れ（段）の向きのトラック、across = 帯を並べる向きのトラック
+    const along = horiz ? 'gridColumn' : 'gridRow', across = horiz ? 'gridRow' : 'gridColumn';
+    lanes.forEach((g, li) => {
+      const frame = document.createElement('section');
+      frame.className = 'grp lane';
+      frame.style.setProperty('--c', groupColor(g));
+      frame.style[across] = String(li + 1);
+      frame.style[along] = `1 / ${used.length * 2}`;
+      frame.innerHTML = `<div class="grp-h"><span class="idx">${String(li + 1).padStart(2, '0')}</span><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div>`;
+      els.rows.append(frame);
+      for (const st of used) {
+        const list = vis.filter((n) => gid(n) === g.id && stepsOf(n).includes(st));
+        if (!list.length) continue;
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style[across] = String(li + 1);
+        cell.style[along] = String(posOf.get(st));
+        cell.append(...list.map((n) => nodeEl(n, v, st)));
+        els.rows.append(cell);
+      }
+    });
+    if (tools) {
+      tools.style[along] = String(toolPos);
+      if (horiz) tools.style.gridRow = `1 / ${lanes.length + 1}`;
+      els.rows.append(tools);
+    }
+  }
+  // 実装用の道具（本番のサービスの中では動かないもの）を、流れの図の後ろ（縦の流れでは下、横の流れでは右端）にまとめて置く
+  function toolSection(vis, v) {
+    const tgs = groups.filter((g) => g.tool && vis.some((n) => gid(n) === g.id));
+    if (!tgs.length) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'tools';
+    wrap.innerHTML = '<p class="tools-h"><b>⚒ 実装用の道具</b> ・ 作る・確かめる・調整するときに使うもの（本番のサービスの中では動かない）</p><div class="tools-row"></div>';
+    for (const g of tgs) {
+      const box = document.createElement('section');
+      box.className = 'grp tool';
+      box.style.setProperty('--c', groupColor(g));
+      box.style.setProperty('--cols', '4');
+      box.innerHTML = `<div class="grp-h"><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div><div class="grp-nodes"></div>`;
+      box.lastElementChild.append(...vis.filter((n) => gid(n) === g.id).map((n) => nodeEl(n, v)));
+      wrap.lastElementChild.append(box);
+    }
+    return wrap;
+  }
+  // 段の図（step のない旧形式）: row が同じグループは横に並べる（row がなければ 1 グループ 1 行・書いた順）
+  function renderTiers(vis, v) {
+    const rowKey = (g, i) => (Number.isInteger(g.row) ? g.row : i + 1);
+    const keys = [...new Set(groups.map(rowKey))].sort((a, b) => a - b);
+    let i = 0;
+    for (const key of keys) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      for (const g of groups.filter((x, k) => !x.tool && rowKey(x, k) === key)) {
+        const list = vis.filter((n) => gid(n) === g.id);
+        if (!list.length) continue;
+        i += 1;
+        const box = document.createElement('section');
+        box.className = 'grp';
+        box.style.setProperty('--c', groupColor(g));
+        box.style.setProperty('--cols', String(Number.isInteger(g.cols) ? Math.min(8, Math.max(1, g.cols)) : 4));
+        box.innerHTML = `<div class="grp-h"><span class="idx">${String(i).padStart(2, '0')}</span><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div><div class="grp-nodes"></div>`;
+        box.lastElementChild.append(...list.map((n) => nodeEl(n, v)));
+        row.append(box);
+      }
+      if (row.children.length) els.rows.append(row);
+    }
+    const tools = toolSection(vis, v);
+    if (tools) els.rows.append(tools);
+  }
+
+  /* ── wires: 段の隙間を通る直角の線を自動で引く ── */
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+
+  function drawWires(pass = 0) {
+    els.wires.replaceChildren();
+    els.labels.replaceChildren();
+    const nodeEls = [...els.rows.querySelectorAll('.node')];
+    if (!visEdges.length || !nodeEls.length) { applyHighlight(); return; }
+    const S = els.canvas.getBoundingClientRect();
+    const z = cam.z;
+    // 横の流れでは縦と横を入れ替えて、縦の流れと同じ手順で線を引く（描くときに戻す）
+    const H = flowH();
+    const loc = (r) => {
+      const x0 = (r.left - S.left) / z, x1 = (r.right - S.left) / z, y0 = (r.top - S.top) / z, y1 = (r.bottom - S.top) / z;
+      return H ? { l: y0, r: y1, t: x0, b: x1 } : { l: x0, r: x1, t: y0, b: y1 };
+    };
+    const real = (p) => (H ? { x: p.y, y: p.x } : p);
+    const boxes = new Map();
+    const copies = new Map();
+    for (const el of nodeEls) {
+      if (!copies.has(el.dataset.id)) copies.set(el.dataset.id, []);
+      copies.get(el.dataset.id).push({ key: el.dataset.key, step: Number(el.dataset.step) });
+      const bx = loc(el.getBoundingClientRect());
+      bx.cx = (bx.l + bx.r) / 2;
+      boxes.set(el.dataset.key, bx);
+    }
+    const cols = [...els.rows.querySelectorAll('.grp-nodes, .cell')].map((el) => loc(el.getBoundingClientRect()));
+    const colL = Math.min(...cols.map((r) => r.l));
+    const colR = Math.max(...cols.map((r) => r.r));
+    // 横の流れでは、帯と帯の境目（箱のない横長の空き）の中心。線がそこを横切るなら、ラベルを横書きでそこに置ける
+    const bands = H ? [...els.rows.querySelectorAll('.grp.lane')].map((el) => loc(el.getBoundingClientRect())).sort((a, b) => a.l - b.l) : [];
+    const seams = bands.slice(1).map((b, i) => (bands[i].r + b.l) / 2);
+    const labelW = new Map();
+    const widthOf = (text) => {
+      if (!labelW.has(text)) {
+        const t = document.createElement('span');
+        t.className = 'wl';
+        t.textContent = text;
+        els.labels.append(t);
+        labelW.set(text, t.offsetWidth);
+        t.remove();
+      }
+      return labelW.get(text);
+    };
+
+    // 見た目の「行」（折り返しも 1 行として扱う）。横並びのグループで見出しの高さが違っても同じ行とみなす
+    const lines = [];
+    for (const bx of [...boxes.values()].sort((a, b) => a.t - b.t)) {
+      let line = lines[lines.length - 1];
+      if (!line || bx.t > line.t + 24) { line = { t: bx.t, b: bx.b, items: [] }; lines.push(line); }
+      line.b = Math.max(line.b, bx.b);
+      line.items.push(bx);
+      bx.line = lines.length - 1;
+    }
+    lines.forEach((line) => line.items.sort((a, b) => a.l - b.l));
+    const LANE = 16;
+    const gapRange = (g, m) => [lines[g].b, g + 1 < lines.length ? lines[g + 1].t : lines[g].b + Math.max(32, LANE * (m + 1))];
+
+    // 両端の組み合わせは「下へ進む・段の差が小さい」ものを選ぶ（なければ上へ戻る差が小さいもの）
+    const pick = (e) => {
+      let best = null, cost = Infinity;
+      for (const a of copies.get(e.from)) {
+        for (const b of copies.get(e.to)) {
+          const d = b.step - a.step, c = d > 0 ? d : 1000 - d;
+          if (c < cost) { cost = c; best = [a.key, b.key]; }
+        }
+      }
+      return best;
+    };
+    const wires = visEdges.map((e) => {
+      const [ka, kb] = pick(e);
+      const A = boxes.get(ka), B = boxes.get(kb);
+      return { e, ka, kb, A, B, kind: B.line > A.line ? 'down' : B.line < A.line ? 'up' : 'u' };
+    });
+
+    // 箱の上下の辺に接続口を割り振る（相手の位置順に並べて交差を減らす）
+    const ports = new Map();
+    const addPort = (id, side, w, end, otherX) => {
+      const k = `${id}|${side}`;
+      if (!ports.has(k)) ports.set(k, []);
+      ports.get(k).push({ w, end, otherX });
+    };
+    for (const w of wires) {
+      const { A, B, kind } = w;
+      if (kind === 'down') { addPort(w.ka, 'b', w, 'sp', B.cx); addPort(w.kb, 't', w, 'tp', A.cx); }
+      if (kind === 'up') { addPort(w.ka, 't', w, 'sp', B.cx); addPort(w.kb, 'b', w, 'tp', A.cx); }
+      if (kind === 'u') { addPort(w.ka, 'b', w, 'sp', B.cx); addPort(w.kb, 'b', w, 'tp', A.cx); }
+    }
+    for (const [k, list] of ports) {
+      const [id, side] = k.split('|');
+      const bx = boxes.get(id);
+      const width = bx.r - bx.l;
+      list.sort((a, b) => a.otherX - b.otherX);
+      list.forEach((p, i) => {
+        const x = list.length === 1 ? bx.cx : bx.l + width * 0.2 + (width * 0.6 * (i + 0.5)) / list.length;
+        p.w[p.end] = { x, y: side === 't' ? bx.t : bx.b };
+      });
+    }
+
+    // 段を飛ばす線は、途中の段の箱の隙間（チャンネル）を縦に通す
+    const chanUse = new Map();
+    const findChannel = (mids, x1, x2) => {
+      const cands = [x1, x2, (x1 + x2) / 2];
+      for (const li of mids) {
+        const it = lines[li].items;
+        cands.push(it[0].l - 16, it[it.length - 1].r + 16);
+        for (let i = 0; i < it.length - 1; i++) cands.push((it[i].r + it[i + 1].l) / 2);
+      }
+      let best = null, bestCost = Infinity;
+      for (const x of cands) {
+        if (x < colL + 4 || x > colR - 4) continue;
+        if (!mids.every((li) => lines[li].items.every((b) => x < b.l - 6 || x > b.r + 6))) continue;
+        const cost = Math.abs(x - x1) + Math.abs(x - x2);
+        if (cost < bestCost) { bestCost = cost; best = x; }
+      }
+      if (best === null) best = colR + 8;
+      const key = Math.round(best);
+      const used = chanUse.get(key) || 0;
+      chanUse.set(key, used + 1);
+      return best + Math.ceil(used / 2) * 6 * (used % 2 ? 1 : -1);
+    };
+    const range = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
+
+    const gaps = new Map();
+    const addSeg = (g, x1, x2) => {
+      const s = { x1, x2, y: 0, g };
+      if (!gaps.has(g)) gaps.set(g, []);
+      gaps.get(g).push(s);
+      return s;
+    };
+    for (const w of wires) {
+      const { A, B, kind } = w;
+      if (kind === 'u') { w.s1 = addSeg(A.line, w.sp.x, w.tp.x); continue; }
+      const down = kind === 'down';
+      if (Math.abs(w.sp.x - w.tp.x) < 8 && w.sp.x > B.l + 8 && w.sp.x < B.r - 8) w.tp.x = w.sp.x;
+      const g1 = down ? A.line : A.line - 1;
+      const g2 = down ? B.line - 1 : B.line;
+      if (g1 === g2) { w.s1 = addSeg(g1, w.sp.x, w.tp.x); continue; }
+      w.cx = findChannel(down ? range(A.line + 1, B.line - 1) : range(B.line + 1, A.line - 1), w.sp.x, w.tp.x);
+      w.s1 = addSeg(g1, w.sp.x, w.cx);
+      w.s2 = addSeg(g2, w.cx, w.tp.x);
+    }
+
+    // 同じ隙間を通る横線は高さ（レーン）をずらす。ラベルが箱にかからないよう、
+    // 隙間ごとに「レーン数 + 1」× LANE の高さを取る。流れの図は隙間ごと、段の図は全体の間隔（--gap-y）で調整する。
+    // 横の流れで、ラベルを帯の境目に置けない線（同じ帯の中を進む線）があれば、その隙間はラベルの幅まで広げる
+    let deficit = -Infinity;
+    const dir = (s) => Math.sign(Math.round(s.x2 - s.x1));
+    for (const [g, segs] of gaps) {
+      const [y0, y1] = gapRange(g, segs.length);
+      segs.sort((a, b) => dir(b) - dir(a) || (dir(a) > 0 ? b.x1 - a.x1 : a.x1 - b.x1));
+      segs.forEach((s, i) => { s.y = y0 + ((y1 - y0) * (i + 1)) / (segs.length + 1); });
+      if (g + 1 < lines.length && y1 > y0) deficit = Math.max(deficit, LANE * (segs.length + 1) - (y1 - y0));
+    }
+    // 横の流れのラベルは、線の縦の部分が横切る帯の境目のうち、真ん中に近いものに置く。
+    // 境目の横に箱があってラベルがかかる場合（右端の道具の区画など）は、その境目を使わない
+    const seamOf = (w) => {
+      const half = widthOf(w.e.label) / 2 + 4;
+      for (const s of [w.s1, w.s2]) {
+        if (!s) continue;
+        const lo = Math.min(s.x1, s.x2) + 4, hi = Math.max(s.x1, s.x2) - 4, mid = (s.x1 + s.x2) / 2;
+        const free = (c) => ![...boxes.values()].some((b) => b.l < c + 12 && b.r > c - 12 && b.t < s.y + half && b.b > s.y - half);
+        const hit = seams.filter((c) => c > lo && c < hi && free(c)).sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid))[0];
+        if (hit !== undefined) return { x: hit, y: s.y };
+      }
+      return null;
+    };
+    if (els.rows.classList.contains('flow')) {
+      const labelNeed = new Map();
+      if (H) for (const w of wires) if (w.e.label && !seamOf(w)) labelNeed.set(w.s1.g, Math.max(labelNeed.get(w.s1.g) || 0, widthOf(w.e.label) + 16));
+      let changed = false;
+      for (let g = 0; g + 1 < lines.length; g++) {
+        const want = `${Math.max(32, LANE * ((gaps.get(g)?.length || 0) + 1), labelNeed.get(g) || 0)}px`;
+        if (els.rows.style.getPropertyValue(`--g${g}`) !== want) { els.rows.style.setProperty(`--g${g}`, want); changed = true; }
+      }
+      if (pass === 0 && changed) { drawWires(1); return; }
+    }
+    const curGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap-y'));
+    const needGap = deficit === -Infinity ? 40 : Math.min(200, Math.max(40, Math.ceil(curGap + deficit)));
+    if (pass === 0 && !els.rows.classList.contains('flow') && needGap !== curGap) {
+      document.documentElement.style.setProperty('--gap-y', `${needGap}px`);
+      drawWires(1);
+      return;
+    }
+
+    for (const w of wires) {
+      const { sp, tp, s1, s2 } = w;
+      const pts = simplify(s2
+        ? [sp, { x: sp.x, y: s1.y }, { x: w.cx, y: s1.y }, { x: w.cx, y: s2.y }, { x: tp.x, y: s2.y }, tp]
+        : [sp, { x: sp.x, y: s1.y }, { x: tp.x, y: s1.y }, tp]);
+      // ラベルは段の隙間にある最初のレーン上に置き、箱と重ならないようにする。横の流れでは帯の境目に置き、
+      // 置けなければ（広げておいた）隙間の中に収める。どちらの向きに逃がすかも覚えておく（applyHighlight）
+      let at = null;
+      if (w.e.label) {
+        const seam = H && seamOf(w);
+        if (seam) at = { ...real(seam), nudge: 'x' };
+        else {
+          const i = pts.findIndex((p, k) => k < pts.length - 1 && Math.abs(p.y - s1.y) < 0.5 && Math.abs(pts[k + 1].y - s1.y) < 0.5);
+          const p = { x: i < 0 ? pts[0].x : (pts[i].x + pts[i + 1].x) / 2, y: s1.y };
+          if (H) {
+            const [y0, y1] = gapRange(s1.g, gaps.get(s1.g).length), half = widthOf(w.e.label) / 2 + 4;
+            p.y = Math.max(y0 + half, Math.min(y1 - half, p.y));
+          }
+          at = { ...real(p), nudge: H ? 'y' : 'x' };
+        }
+      }
+      renderWire(w.e, pts.map(real), at);
+    }
+    applyHighlight();
+  }
+
+  function simplify(pts) {
+    const out = [];
+    for (const p of pts) {
+      const last = out[out.length - 1];
+      if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) continue;
+      out.push(p);
+    }
+    for (let i = out.length - 2; i > 0; i--) {
+      const a = out[i - 1], b = out[i], c = out[i + 1];
+      if ((Math.abs(a.x - b.x) < 0.5 && Math.abs(b.x - c.x) < 0.5) || (Math.abs(a.y - b.y) < 0.5 && Math.abs(b.y - c.y) < 0.5)) out.splice(i, 1);
+    }
+    return out;
+  }
+  function roundedPath(pts, r = 6) {
+    let d = `M${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+      const d1 = Math.hypot(p1.x - p0.x, p1.y - p0.y), d2 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const rr = Math.min(r, d1 / 2, d2 / 2);
+      const a = { x: p1.x + ((p0.x - p1.x) * rr) / d1, y: p1.y + ((p0.y - p1.y) * rr) / d1 };
+      const b = { x: p1.x + ((p2.x - p1.x) * rr) / d2, y: p1.y + ((p2.y - p1.y) * rr) / d2 };
+      d += ` L${a.x},${a.y} Q${p1.x},${p1.y} ${b.x},${b.y}`;
+    }
+    const z = pts[pts.length - 1];
+    return `${d} L${z.x},${z.y}`;
+  }
+  function edgeKind(e) {
+    if (state.view !== 'diff') return 'both';
+    const a = statusOf(nodeById.get(e.from)), b = statusOf(nodeById.get(e.to));
+    if (e.only === 'plan' || a === 'todo' || b === 'todo') return 'todo';
+    if (e.only === 'built' || a === 'extra' || b === 'extra') return 'extra';
+    return 'both';
+  }
+  function renderWire(e, pts, at) {
+    const end = pts[pts.length - 1], prev = pts[pts.length - 2];
+    const len = Math.hypot(end.x - prev.x, end.y - prev.y) || 1;
+    const ux = (end.x - prev.x) / len, uy = (end.y - prev.y) / len;
+    const al = Math.min(7, len - 1);
+    const body = pts.slice();
+    body[body.length - 1] = { x: end.x - ux * al, y: end.y - uy * al };
+    const toolEdge = isTool(nodeById.get(e.from)) || isTool(nodeById.get(e.to));
+    const g = svg('g', { class: `wire k-${edgeKind(e)}${e.kind === 'result' ? ' res' : ''}${toolEdge ? ' tool' : ''}`, 'data-from': e.from, 'data-to': e.to });
+    const bx = end.x - ux * 7, by = end.y - uy * 7;
+    g.append(
+      svg('path', { d: roundedPath(body) }),
+      svg('polygon', { points: `${end.x},${end.y} ${bx - uy * 4},${by + ux * 4} ${bx + uy * 4},${by - ux * 4}` }),
+      svg('circle', { cx: pts[0].x, cy: pts[0].y, r: 2.5 }),
+    );
+    els.wires.append(g);
+    if (!at) return;
+    const tag = document.createElement('span');
+    tag.className = 'wl';
+    tag.dataset.nudge = at.nudge;
+    tag.dataset.from = e.from;
+    tag.dataset.to = e.to;
+    tag.textContent = e.label;
+    tag.style.left = `${at.x}px`;
+    tag.style.top = `${at.y}px`;
+    els.labels.append(tag);
+  }
+
+  function applyHighlight() {
+    const id = state.sel;
+    const rel = new Set(id ? [id] : []);
+    if (id) for (const e of visEdges) if (e.from === id || e.to === id) { rel.add(e.from); rel.add(e.to); }
+    if (id) els.stage.style.setProperty('--hc', nodeColor(nodeById.get(id), state.view));
+    for (const b of els.rows.querySelectorAll('.node')) {
+      const on = b.dataset.id === id;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('dim', !!id && !rel.has(b.dataset.id));
+    }
+    const hit = (el) => !!id && (el.dataset.from === id || el.dataset.to === id);
+    for (const g of [...els.wires.children]) {
+      g.classList.toggle('on', hit(g));
+      g.classList.toggle('dim', !!id && !hit(g));
+      if (hit(g)) els.wires.append(g);
+    }
+    // 表示するラベル同士が重なったら、後のものを空きに沿ってずらす（段の隙間・帯の境目に沿って右へ。横の流れの隙間の中では下へ）
+    const m = flowH() ? 2 : 0;
+    const placed = [];
+    for (const t of els.labels.children) {
+      t.classList.toggle('on', hit(t));
+      t.style.translate = '';
+      if (!hit(t)) continue;
+      const r = t.getBoundingClientRect();
+      let dx = 0, dy = 0;
+      for (let k = 0; k < 8; k++) {
+        const o = placed.find((p) => r.left + dx < p.right + 4 && r.right + dx > p.left - 4 && r.top + dy < p.bottom + m && r.bottom + dy > p.top - m);
+        if (!o) break;
+        if (t.dataset.nudge === 'y') dy = o.bottom + m - r.top;
+        else dx = o.right + 4 - r.left;
+      }
+      t.style.translate = `${dx / cam.z}px ${dy / cam.z}px`;
+      placed.push({ left: r.left + dx, right: r.right + dx, top: r.top + dy, bottom: r.bottom + dy });
+    }
+  }
+
+  /* ── inspector ── */
+  function connLi(e, dir) {
+    const other = nodeById.get(dir === 'in' ? e.from : e.to);
+    const words = e.kind === 'result' ? ['◂ 受け取る', '▸ 渡す'] : ['◂ 頼まれる', '▸ 頼む'];
+    return `<li><span class="dir">${dir === 'in' ? words[0] : words[1]}</span>`
+      + `<span><button type="button" class="go" data-go="${esc(other.id)}">${esc(other.name)}</button>`
+      + `${e.label ? `<span class="lbl">「${esc(e.label)}」</span>` : ''}</span></li>`;
+  }
+  function nodeHTML(n, v) {
+    const l = groupById.get(gid(n));
+    const tech = techOf(n, v);
+    const inc = visEdges.filter((e) => e.to === n.id), out = visEdges.filter((e) => e.from === n.id);
+    let h = `<p class="crumb">${esc(l.name)}<span>/</span>${esc(n.id)}</p><h2>${titleHTML(n.id, n.name)}</h2>`;
+    const chips = [];
+    if (!n.actor) chips.push(`<span class="chip">${statusText(n, v)}</span>`);
+    if (n.output) chips.push('<span class="chip">⇥ 最後の出力</span>');
+    if (isTool(n)) chips.push('<span class="chip">⚒ 実装用の道具</span>');
+    if (tech) chips.push(`<span class="chip">${esc(tech)}</span>`);
+    if (chips.length) h += `<p class="chips">${chips.join('')}</p>`;
+    if (isTool(n)) h += '<p class="lead">サービスを作る・確かめる・調整するときに使う道具です。本番のサービスの中では動きません。</p>';
+    h += sec('ひとことで', `<p>${esc(n.role)}</p>`);
+    if (n.detail) h += sec('くわしく', `<p>${esc(n.detail)}</p>`);
+    if (n.analogy) h += sec('たとえるなら', `<blockquote class="quote">${esc(n.analogy)}</blockquote>`);
+    if (n.service?.name) {
+      const s = n.service, url = safeUrl(s.docs);
+      let kv = `<dt>サービス</dt><dd>${url ? `<a class="go" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)} ↗</a>` : esc(s.name)}</dd>`;
+      if (s.provider) kv += `<dt>提供元</dt><dd>${esc(s.provider)}</dd>`;
+      if (Array.isArray(s.env) && s.env.length) kv += `<dt>必要な設定</dt><dd>${s.env.map((k) => `<code>${esc(k)}</code>`).join(' ')}</dd>`;
+      h += sec('使っているサービス', `<dl class="kv">${kv}</dl>`);
+    }
+    if (hasIssue(n, v)) h += sec('要確認', `<p class="bad-t">${esc(n.built.issue)}</p>`);
+    if (inc.length || out.length) h += sec('つながり', `<ul class="ls conn">${inc.map((e) => connLi(e, 'in')).join('')}${out.map((e) => connLi(e, 'out')).join('')}</ul>`);
+    const diffs = [];
+    if (v !== 'plan' && changed(n)) diffs.push(`<li>技術：計画では ${esc(n.plan.tech)}、実装では ${esc(n.built.tech)}</li>`);
+    if (v === 'diff' && !n.built && !n.actor) diffs.push('<li>計画にありますが、まだ作られていません</li>');
+    if (v === 'diff' && !n.plan && !n.actor) diffs.push('<li>計画にはありませんでしたが、実装で追加されました</li>');
+    if (diffs.length) h += sec('計画とのちがい', `<ul class="ls">${diffs.join('')}</ul>`);
+    if (n.plan?.note && v !== 'built') h += sec('計画メモ', `<p>${esc(n.plan.note)}</p>`);
+    if (n.built?.note && v !== 'plan') h += sec('実装メモ', `<p>${esc(n.built.note)}</p>`);
+    if (v !== 'plan' && n.built?.files?.length) h += sec('ファイル', `<ul class="ls files">${n.built.files.map((f) => `<li><code>${esc(f)}</code></li>`).join('')}</ul>`);
+    return `${h}<button type="button" class="back" data-go="">← 全体のガイドにもどる</button>`;
+  }
+  function overviewHTML() {
+    const things = nodes.filter((n) => !n.actor);
+    const planned = things.filter((n) => n.plan), built = things.filter((n) => n.built);
+    const c = { done: 0, wip: 0, todo: 0, extra: 0 };
+    things.forEach((n) => { c[statusOf(n)] += 1; });
+    const issues = nodes.filter((n) => n.built?.issue);
+    let h = `<p class="crumb">ガイド</p><h2>${titleHTML('', project.name || 'このアプリ')}</h2>`;
+    if (project.summary) h += `<p class="lead">${esc(project.summary)}</p>`;
+    if (planned.length && built.length) {
+      h += sec('進みぐあい', meter(Math.round((c.done / planned.length) * 100), ' meter-big')
+        + `<div class="stats">${Object.entries(STATUS).map(([k, s]) => `<div style="--c:${s.color}"><b>${c[k]}</b><span>${s.label}</span></div>`).join('')}</div>`);
+    }
+    const toolsList = nodes.filter(isTool);
+    const outs = nodes.filter((n) => n.output);
+    if (outs.length) h += sec('最後の出力', `<p>このアプリが最後に届けるものです。</p><ul class="ls">${outs.map((n) => `<li><button type="button" class="go" data-go="${esc(n.id)}">⇥ ${esc(n.name)}</button><span class="muted"> — ${esc(n.role)}${n.built ? '' : '（計画）'}</span></li>`).join('')}</ul>`);
+    if (toolsList.length) h += sec('実装用の道具', `<p>本番のサービスの中では動かず、作る・確かめる・調整するときに使うものです。</p><ul class="ls">${toolsList.map((n) => `<li><button type="button" class="go" data-go="${esc(n.id)}">⚒ ${esc(n.name)}</button><span class="muted"> — ${esc(n.role)}</span></li>`).join('')}</ul>`);
+    const svcs = nodes.filter((n) => n.service?.name);
+    if (svcs.length) h += sec('使っている外部サービス', `<ul class="ls">${svcs.map((n) => `<li><button type="button" class="go" data-go="${esc(n.id)}">◈ ${esc(n.service.name)}</button>${n.service.provider ? `（${esc(n.service.provider)}）` : ''}<span class="muted"> — ${esc(n.name)}${n.built ? '' : '（計画）'}</span></li>`).join('')}</ul>`);
+    if (issues.length) h += sec('要確認', `<ul class="ls">${issues.map((n) => `<li><button type="button" class="go bad-t" data-go="${esc(n.id)}">✕ ${esc(n.name)}</button>：${esc(n.built.issue)}</li>`).join('')}</ul>`);
+    const H = flowH();
+    h += sec('図の読み方', '<ul class="ls">'
+      + '<li>箱 ＝ 機能のまとまり。クリックすると、ここに説明が出ます</li>'
+      + '<li>線 ＝ 「頼む側」から「頼まれる側」へ。矢印の先が頼まれる側です</li>'
+      + '<li>点線 ＝ 結果が返っていく流れ。⇥ の箱が、利用者などが最後に受け取るものです</li>'
+      + `<li>${H ? '右端' : '下'}の「⚒ 実装用の道具」＝ 作る・確かめるための道具。本番のサービスの中では動きません（一点鎖線でつながります）</li>`
+      + (H ? '<li>左から右へ ＝ 起きる順番。いちばん左が最初の入力、いちばん右が結果を受け取るところです</li>'
+        : '<li>上から下へ ＝ 起きる順番。いちばん上が最初の入力、いちばん下が結果を受け取るところです</li>')
+      + `<li>${H ? '横の帯' : '縦の枠'} ＝ 実際のまとまり（動く場所や部品）。同じ箱が 2 回出てくるのは、受け付けたあと結果を返すときなどです</li>`
+      + '<li>◈ ＝ 外部のサービス（API など）を使っている箱。右のパネルにサービス名と必要な設定が出ます</li>'
+      + '<li>スペースを押しながらドラッグ（空いている所なら普通のドラッグ、中ボタンでも可）で移動、ctrl＋ホイールで拡大・縮小。h で初期表示、f で全体を表示、r で図の向き（横・縦）を切り替え</li>'
+      + '<li>キー 1・2・3 で表示を切り替え、Esc でここにもどります</li>'
+      + '<li>パネルの見出し（✎）をクリックすると名前を書き換えられます。「保存」で arch-data.js に書き戻します</li></ul>');
+    if (glossary.length) h += sec('用語ミニ辞典', `<dl class="gl">${glossary.map((g) => `<dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd>`).join('')}</dl>`);
+    h += sec(`更新ログ${log.length ? ` <span class="muted">· ${log.length} 件</span>` : ''}`, logHTML());
+    h += sec('図を最新にするには', '<ul class="cmds">'
+      + '<li><code>/arch-map</code><span>計画と実装を読み直して、変わったところだけ更新</span></li>'
+      + '<li><code>/arch-map plan</code><span>計画（これから作るもの）を描く・直す</span></li>'
+      + '<li><code>/arch-map built</code><span>実装（作ったもの）をコードから読み取る</span></li></ul>');
+    return h;
+  }
+  function renderPanel() {
+    const n = state.sel && nodeById.get(state.sel);
+    els.insp.firstElementChild.style.setProperty('--pc', n ? nodeColor(n, state.view) : 'var(--accent)');
+    els.inspT.textContent = n ? '詳細' : 'ガイド';
+    els.inspK.innerHTML = n ? '<kbd>esc</kbd> 全体へ' : '箱をクリックで詳細';
+    els.panel.innerHTML = n ? nodeHTML(n, state.view) : overviewHTML();
+  }
+
+  /* ── 見出し（名前）の書き換えと保存 ── */
+  // 書き換えた名前（キーは箱の id、'' はプロジェクト名）。保存で arch-data.js に書き戻す
+  const renames = new Map();
+  let fileHandle = null, saving = false, saveMsg = null;
+  const HEADER = '// arch-map のデータです。/arch-map スキルが読み書きします（手で直すときは JSON の書式を守ってください）';
+  const titleHTML = (key, name) => `<button type="button" class="ttl" data-edit="${esc(key)}" title="クリックで名前を書き換え">${esc(name)}<span class="pen" aria-hidden="true">✎</span></button>`;
+  function startEdit(key) {
+    const h = els.panel.querySelector('h2');
+    const n = key ? nodeById.get(key) : null;
+    h.innerHTML = `<input class="ttl-in" maxlength="40" aria-label="${n ? '箱の名前' : 'プロジェクト名'}">`;
+    h.insertAdjacentHTML('afterend', '<p class="hint"></p>');
+    const input = h.firstElementChild, hint = h.nextElementSibling;
+    const count = () => {
+      hint.textContent = `Enter で決定 · Esc でやめる${n ? ` · ${[...input.value.trim()].length} 文字（12 文字以内だと箱に収まります）` : ''}`;
+    };
+    input.value = n ? n.name : project.name || '';
+    count();
+    input.focus();
+    input.select();
+    let done = false;
+    // 箱やリンクをクリックして入力欄を離れたときも決定する。そのクリックが効くよう、パネルと図は作り直さず書き換えた所だけ直す。
+    // 別のアプリに切り替えただけ（ウィンドウごとフォーカスが外れた）のときは、入力を続けられるよう決定しない
+    const finish = (commit, refocus) => {
+      if (done) return;
+      done = true;
+      if (commit) rename(key, input.value);
+      hint.remove();
+      h.innerHTML = titleHTML(key, n ? n.name : project.name || 'このアプリ');
+      if (refocus) h.firstElementChild.focus();
+    };
+    input.addEventListener('input', count);
+    input.addEventListener('blur', () => { if (document.hasFocus()) finish(true, false); });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.isComposing || ev.keyCode === 229) return;
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true, true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false, true); }
+    });
+  }
+  function rename(key, raw) {
+    const name = raw.replace(/\s+/g, ' ').trim();
+    const target = key ? nodeById.get(key) : project;
+    if (!name || name === target.name) return;
+    const from = renames.get(key)?.from ?? target.name;
+    target.name = name;
+    if (name === from) renames.delete(key);
+    else renames.set(key, { from, to: name });
+    if (key) {
+      for (const el of els.rows.querySelectorAll(`.node[data-id="${CSS.escape(key)}"] .nm`)) el.textContent = name;
+      redraw();
+      renderCmd();
+    } else renderHeader();
+    saveMsg = null;
+    renderSavebar();
+  }
+  function renderSavebar() {
+    const n = renames.size;
+    els.savebar.hidden = !n && !saveMsg;
+    els.savebar.classList.toggle('ok', !!saveMsg?.ok);
+    els.savebar.classList.toggle('bad', saveMsg?.ok === false);
+    els.saveT.textContent = saveMsg?.text ?? `● 名前の変更 ${n} 件が未保存です`;
+    els.save.hidden = !n;
+  }
+
+  // archmap.mjs の format と同じ整形。保存したときの差分が名前の行だけになるよう、変えるときは両方そろえる
+  function inline(v) {
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) return `[${v.map(inline).join(', ')}]`;
+    return `{${Object.entries(v).filter(([, x]) => x !== undefined).map(([k, x]) => `${JSON.stringify(k)}: ${inline(x)}`).join(', ')}}`;
+  }
+  function format(v, indent = '') {
+    const flat = inline(v);
+    if (v === null || typeof v !== 'object' || indent.length + flat.length <= 110) return flat;
+    const next = `${indent}  `;
+    if (Array.isArray(v)) return `[\n${v.map((x) => next + format(x, next)).join(',\n')}\n${indent}]`;
+    const entries = Object.entries(v).filter(([, x]) => x !== undefined);
+    return `{\n${entries.map(([k, x]) => `${next}${JSON.stringify(k)}: ${format(x, next)}`).join(',\n')}\n${indent}}`;
+  }
+  // 選ばれたファイルの「いまの中身」に名前の変更だけを当てる（図を開いたあとに /arch-map で更新されていても、その更新を消さない）
+  function withRenames(src) {
+    const m = src.match(/window\.ARCH_MAP\s*=\s*/);
+    let data = null;
+    if (m) { try { data = JSON.parse(src.slice(m.index + m[0].length).trim().replace(/;\s*$/, '')); } catch { data = null; } }
+    if (!data?.project || !Array.isArray(data.nodes)) throw new Error('arch-map のデータではありません。この図と同じフォルダの arch-data.js を選んでください');
+    const was = renames.get('')?.from ?? project.name;
+    if (data.project.name !== was) throw new Error(`別のプロジェクト（${data.project.name ?? '名前なし'}）のデータです。この図と同じフォルダの arch-data.js を選んでください`);
+    const byId = new Map(data.nodes.map((n) => [n.id, n]));
+    const gone = [...renames].filter(([k]) => k && !byId.has(k)).map(([, r]) => r.from);
+    if (gone.length) throw new Error(`選んだファイルには「${gone.join('」「')}」の箱がありません。図が更新されたかもしれないので、再読み込みしてから書き換えてください`);
+    for (const [k, r] of renames) (k ? byId.get(k) : data.project).name = r.to;
+    return `${src.slice(0, m.index)}window.ARCH_MAP = ${format(data)};\n`;
+  }
+  // ファイルに直接書けないブラウザ（Safari・Firefox）では、書き換えたデータをダウンロードしてもらう
+  function downloadData() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([`${HEADER}\nwindow.ARCH_MAP = ${format(D)};\n`], { type: 'text/javascript' }));
+    a.download = 'arch-data.js';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    renames.clear();
+    saveMsg = { ok: true, text: '↓ arch-data.js をダウンロードしました。この図と同じフォルダの arch-data.js をそれで置き換えると保存されます' };
+  }
+  async function save() {
+    if (!renames.size || saving) return;
+    saving = true;
+    els.save.disabled = true;
+    try {
+      if (!window.showOpenFilePicker) downloadData();
+      else {
+        if (!fileHandle) [fileHandle] = await showOpenFilePicker({ id: 'arch-map', types: [{ description: 'arch-map のデータ（arch-data.js）', accept: { 'text/javascript': ['.js'] } }] });
+        const text = withRenames(await (await fileHandle.getFile()).text());
+        const opt = { mode: 'readwrite' };
+        if (await fileHandle.queryPermission(opt) !== 'granted' && await fileHandle.requestPermission(opt) !== 'granted') {
+          throw new DOMException('denied', 'NotAllowedError');
+        }
+        const w = await fileHandle.createWritable();
+        await w.write(text);
+        await w.close();
+        renames.clear();
+        const msg = { ok: true, text: `✓ ${fileHandle.name} に保存しました` };
+        saveMsg = msg;
+        setTimeout(() => { if (saveMsg === msg) { saveMsg = null; renderSavebar(); } }, 5000);
+      }
+    } catch (e) {
+      // ファイル選びをやめたときは何もしない。許可が出なかったときは、選んだファイルを覚えたまま押し直してもらう
+      const perm = e.name === 'NotAllowedError' || e.name === 'SecurityError';
+      if (e.name !== 'AbortError') {
+        if (!perm) fileHandle = null;
+        saveMsg = { ok: false, text: perm ? '✕ 書き込みが許可されませんでした。もう一度「保存」を押して、確認が出たら許可してください' : `✕ ${e instanceof DOMException ? `保存できませんでした（${e.message}）` : e.message}` };
+      }
+    } finally {
+      saving = false;
+      els.save.disabled = false;
+      renderSavebar();
+    }
+  }
+
+  /* ── log ── */
+  function logHTML() {
+    if (!log.length) return '<p class="muted">まだ記録はありません。/arch-map を実行すると、ここに変更の履歴が残ります。</p>';
+    return `<ol class="tl">${log.slice().reverse().map((x) => {
+      const [label, color] = LOG_TAG[x.view] || LOG_TAG.both;
+      return `<li style="--c:${color}"><span class="when"><time>${esc(x.date)}</time><span class="tag">${label}</span></span><span class="tx">${esc(x.text)}</span></li>`;
+    }).join('')}</ol>`;
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderStage();
+    renderPanel();
+    writeHash();
+  }
+
+  /* ── canvas: 移動・拡大縮小できるキャンバス ── */
+  const ZMIN = 0.3, ZMAX = 2;
+  const pan = { x: 0, y: 0, sl: 0, st: 0, dragged: false, suppress: false, space: false, over: false };
+  // 図のまわりに表示枠の半分ずつ余白を取り、図が小さくても上下左右に動かせるようにする。
+  // 枠の大きさが変わって余白が変わっても、見えている位置がずれないようスクロール量を補正する
+  function applyZoom() {
+    const padX = Math.round(els.stage.clientWidth / 2), padY = Math.round(els.stage.clientHeight / 2);
+    const dx = padX - cam.padX, dy = padY - cam.padY;
+    cam.padX = padX;
+    cam.padY = padY;
+    els.canvas.style.transform = `scale(${cam.z})`;
+    els.canvas.style.left = `${padX}px`;
+    els.canvas.style.top = `${padY}px`;
+    els.sizer.style.width = `${els.canvas.offsetWidth * cam.z + padX * 2}px`;
+    els.sizer.style.height = `${els.canvas.offsetHeight * cam.z + padY * 2}px`;
+    if (dx) els.stage.scrollLeft += dx;
+    if (dy) els.stage.scrollTop += dy;
+    els.zoomV.textContent = `${Math.round(cam.z * 100)}%`;
+  }
+  // (cx, cy) は表示枠の中の点。その点の下にある図が動かないように拡大縮小する
+  function zoomTo(z, cx = els.stage.clientWidth / 2, cy = els.stage.clientHeight / 2) {
+    const z1 = cam.z, z2 = Math.max(ZMIN, Math.min(ZMAX, z));
+    const px = (els.stage.scrollLeft + cx - cam.padX) / z1;
+    const py = (els.stage.scrollTop + cy - cam.padY) / z1;
+    cam.z = z2;
+    cam.touched = true;
+    applyZoom();
+    els.stage.scrollLeft = px * z2 + cam.padX - cx;
+    els.stage.scrollTop = py * z2 + cam.padY - cy;
+  }
+  const zoomBy = (f) => zoomTo(cam.z * f);
+  // all=false は初期表示（帯が並ぶ向きを画面に収め、文字が読めるよう 60% より小さくしない。流れの始まりから見せる）、
+  // all=true は縦横とも収めて真ん中に置く
+  function fitView(all) {
+    const w = els.canvas.offsetWidth, h = els.canvas.offsetHeight;
+    const sw = els.stage.clientWidth, sh = els.stage.clientHeight;
+    if (!all && flowH()) {
+      cam.z = Math.max(0.6, Math.min(1, (sh - 16) / h));
+      applyZoom();
+      els.stage.scrollLeft = cam.padX + Math.min(0, (w * cam.z - sw) / 2);
+      els.stage.scrollTop = cam.padY + Math.min(0, (h * cam.z - sh) / 2);
+      return;
+    }
+    cam.z = Math.max(all ? ZMIN : 0.6, Math.min(1, (sw - 16) / w, all ? (sh - 16) / h : 1));
+    applyZoom();
+    els.stage.scrollLeft = cam.padX + (w * cam.z - sw) / 2;
+    els.stage.scrollTop = all ? cam.padY + (h * cam.z - sh) / 2 : cam.padY;
+  }
+  function home() {
+    cam.touched = false;
+    fitView(false);
+  }
+  function paintDirButton() {
+    const hint = horiz ? 'いまは横の流れ（左から右）。クリックで縦の流れに切り替え' : 'いまは縦の流れ（上から下）。クリックで横の流れに切り替え';
+    els.dir.textContent = horiz ? '↔ 横' : '↕ 縦';
+    els.dir.title = hint;
+    els.dir.setAttribute('aria-label', hint);
+  }
+  function toggleDir() {
+    if (els.dir.hidden) return;
+    horiz = !horiz;
+    try { localStorage.setItem('arch-map-dir', horiz ? 'h' : 'v'); } catch { /* 保存できなくても今回の表示は切り替わる */ }
+    paintDirButton();
+    renderAll();
+    home();
+  }
+  paintDirButton();
+  function reveal(id) {
+    const el = els.rows.querySelector(`.node[data-id="${CSS.escape(id)}"]`);
+    if (!el) return;
+    const s = els.stage.getBoundingClientRect(), r = el.getBoundingClientRect(), m = 24;
+    const dx = r.left < s.left + m ? r.left - s.left - m : r.right > s.right - m ? r.right - s.right + m : 0;
+    const dy = r.top < s.top + m ? r.top - s.top - m : r.bottom > s.bottom - m ? r.bottom - s.bottom + m : 0;
+    if (dx || dy) els.stage.scrollBy({ left: dx, top: dy, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  // 移動: スペース＋ドラッグ（箱の上からでも可）・空いている所の左ドラッグ・中ボタンドラッグ。
+  // 中ボタンは pointer 系イベントが届かないブラウザがあるため mouse 系で扱う。タッチは標準のスクロールに任せる
+  els.stage.addEventListener('mouseenter', () => { pan.over = true; });
+  els.stage.addEventListener('mouseleave', () => { pan.over = false; });
+  els.stage.addEventListener('mousedown', (ev) => {
+    const onNode = !!ev.target.closest('.node');
+    if (!(ev.button === 1 || (ev.button === 0 && (pan.space || !onNode)))) return;
+    ev.preventDefault();
+    Object.assign(pan, { x: ev.clientX, y: ev.clientY, sl: els.stage.scrollLeft, st: els.stage.scrollTop, dragged: false });
+    addEventListener('mousemove', movePan);
+    addEventListener('mouseup', endPan);
+  });
+  function movePan(ev) {
+    if (ev.buttons === 0) { endPan(); return; }
+    const dx = ev.clientX - pan.x, dy = ev.clientY - pan.y;
+    if (!pan.dragged && Math.hypot(dx, dy) < 4) return;
+    if (!pan.dragged) { pan.dragged = true; els.stage.classList.add('panning'); }
+    els.stage.scrollLeft = pan.sl - dx;
+    els.stage.scrollTop = pan.st - dy;
+  }
+  // ドラッグを終えた直後のクリック 1 回だけを無視する（選択が切り替わらないように）
+  function endPan() {
+    removeEventListener('mousemove', movePan);
+    removeEventListener('mouseup', endPan);
+    els.stage.classList.remove('panning');
+    if (!pan.dragged) return;
+    pan.dragged = false;
+    pan.suppress = true;
+    setTimeout(() => { pan.suppress = false; });
+  }
+  els.stage.addEventListener('auxclick', (ev) => { if (ev.button === 1) ev.preventDefault(); });
+  els.stage.addEventListener('wheel', (ev) => {
+    if (!ev.ctrlKey && !ev.metaKey) return;
+    ev.preventDefault();
+    const r = els.stage.getBoundingClientRect();
+    zoomTo(cam.z * Math.exp(-ev.deltaY * 0.002), ev.clientX - r.left, ev.clientY - r.top);
+  }, { passive: false });
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+  if (!document.fullscreenEnabled) els.fs.hidden = true;
+  document.addEventListener('fullscreenchange', () => { els.fs.textContent = document.fullscreenElement ? '戻す' : '全画面'; });
+  els.inspClose.addEventListener('click', () => setInsp(false));
+  els.inspOpen.addEventListener('click', () => setInsp(true));
+  els.zoom.addEventListener('click', (ev) => {
+    const k = ev.target.closest('[data-zoom]')?.dataset.zoom;
+    if (k === 'in') zoomBy(1.2);
+    else if (k === 'out') zoomBy(1 / 1.2);
+    else if (k === 'reset') zoomBy(1 / cam.z);
+    else if (k === 'fit') fitView(true);
+    else if (k === 'home') home();
+    else if (k === 'dir') toggleDir();
+    else if (k === 'png') exportPNG();
+    else if (k === 'full') toggleFullscreen();
+  });
+
+  /* ── PNG 書き出し: 画面に描いている要素の位置と色を読み取り、canvas に描き直す（外部ライブラリなし・オフライン可） ── */
+  const probe = document.createElement('canvas').getContext('2d');
+  // canvas が解釈できない color(srgb …) 形式は rgba に直す
+  function cc(str) {
+    if (!str || str === 'none') return 'rgba(0,0,0,0)';
+    probe.fillStyle = '#010203';
+    probe.fillStyle = str;
+    if (probe.fillStyle !== '#010203') return str;
+    const m = str.match(/color\(srgb\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)(?:\s*\/\s*([-\d.e]+%?))?\)/);
+    if (!m) return 'rgba(0,0,0,0)';
+    const a = m[4] == null ? 1 : m[4].endsWith('%') ? parseFloat(m[4]) / 100 : Number(m[4]);
+    return `rgba(${Math.round(m[1] * 255)},${Math.round(m[2] * 255)},${Math.round(m[3] * 255)},${a})`;
+  }
+  // linear-gradient(角度?, 色 位置?, …) を読み取る（この図で使う上→下・左→右だけを扱う）
+  function parseGradient(str) {
+    const m = /linear-gradient\((.*)\)/.exec(str || '');
+    if (!m) return null;
+    const parts = [];
+    let depth = 0, cur = '';
+    for (const ch of m[1]) {
+      if (ch === '(') depth += 1;
+      if (ch === ')') depth -= 1;
+      if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; } else cur += ch;
+    }
+    parts.push(cur.trim());
+    let horizontal = false;
+    if (/deg$/.test(parts[0])) horizontal = parseFloat(parts.shift()) === 90;
+    else if (/^to /.test(parts[0])) horizontal = parts.shift() === 'to right';
+    const stops = parts.map((p) => { const mm = /^(.*?)(?:\s+(-?[\d.]+)%)?$/.exec(p); return { color: cc(mm[1].trim()), at: mm[2] == null ? null : Number(mm[2]) / 100 }; });
+    stops.forEach((st, i) => { if (st.at == null) st.at = i === 0 ? 0 : i === stops.length - 1 ? 1 : (stops[i - 1].at + 1) / 2; });
+    return { horizontal, stops };
+  }
+  function exportCanvas() {
+    const z = cam.z, C = els.canvas.getBoundingClientRect();
+    const loc = (r) => ({ x: (r.left - C.left) / z, y: (r.top - C.top) / z, w: r.width / z, h: r.height / z });
+    const root = getComputedStyle(document.documentElement);
+    const tok = (n) => root.getPropertyValue(n).trim();
+    // 図の外接矩形（枠・線・表示中のラベル）+ 余白
+    const boxes = [...els.rows.querySelectorAll('.grp, .tools')].map((el) => loc(el.getBoundingClientRect()));
+    for (const g of els.wires.children) { const b = g.getBBox(); boxes.push({ x: b.x, y: b.y, w: b.width, h: b.height }); }
+    for (const t of els.labels.querySelectorAll('.wl.on')) boxes.push(loc(t.getBoundingClientRect()));
+    if (!boxes.length) return null;
+    const M = 32, HEAD = 72;
+    const x0 = Math.min(...boxes.map((b) => b.x)) - M, y0 = Math.min(...boxes.map((b) => b.y)) - M;
+    const W = Math.max(...boxes.map((b) => b.x + b.w)) + M - x0, H = Math.max(...boxes.map((b) => b.y + b.h)) + M - y0 + HEAD;
+    const scale = Math.min(2, 8192 / Math.max(W, H));
+    const cv = document.createElement('canvas');
+    cv.width = Math.ceil(W * scale);
+    cv.height = Math.ceil(H * scale);
+    const ctx = cv.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // 背景: 地の色 + キャンバスの色 + ドット方眼
+    ctx.fillStyle = cc(tok('--bg-0'));
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = cc(getComputedStyle(els.stage).backgroundColor);
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = cc(tok('--dot'));
+    for (let y = HEAD + 8; y < H; y += 16) for (let x = 8; x < W; x += 16) ctx.fillRect(x, y, 1, 1);
+
+    // 見出し帯: プロジェクト名・表示・凡例・更新日
+    const font = getComputedStyle(document.body).fontFamily;
+    const v = VIEWS.find((x) => x.id === state.view);
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = cc(tok('--text'));
+    ctx.font = `700 15px ${font}`;
+    ctx.fillText(`${project.name || 'アーキテクチャ図'}  ·  ${v.desc}`, M, 26);
+    ctx.font = `400 12px ${font}`;
+    let lx = M;
+    for (const lg of els.legend.querySelectorAll('.lg')) {
+      const bar = lg.querySelector('.bar');
+      if (bar) { ctx.fillStyle = cc(getComputedStyle(bar).backgroundColor); ctx.fillRect(lx, 50, 12, 4); lx += 20; }
+      ctx.fillStyle = cc(tok('--text-2'));
+      ctx.fillText(lg.textContent.trim(), lx, 52);
+      lx += ctx.measureText(lg.textContent.trim()).width + 24;
+    }
+    if (project.updated) { ctx.textAlign = 'right'; ctx.fillText(`更新 ${project.updated}`, W - M, 26); ctx.textAlign = 'left'; }
+    ctx.fillStyle = cc(tok('--bd'));
+    ctx.fillRect(0, HEAD - 1, W, 1);
+
+    ctx.translate(-x0, HEAD - y0);
+    const box = (r, radius) => { ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, radius); };
+    const fillGradient = (el, r, radius) => {
+      const g = parseGradient(getComputedStyle(el).backgroundImage);
+      if (!g) return;
+      const grad = g.horizontal ? ctx.createLinearGradient(r.x, r.y, r.x + r.w, r.y) : ctx.createLinearGradient(r.x, r.y, r.x, r.y + r.h);
+      g.stops.forEach((st) => grad.addColorStop(Math.max(0, Math.min(1, st.at)), st.color));
+      ctx.fillStyle = grad;
+      box(r, radius);
+      ctx.fill();
+    };
+    // 文字は 1 文字ずつ画面上の位置に置く（折り返し・字間を画面と一致させる）
+    const range = document.createRange();
+    const drawText = (el) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+        const cs = getComputedStyle(t.parentElement);
+        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        ctx.fillStyle = cc(cs.color);
+        const str = t.data;
+        for (let i = 0; i < str.length; i++) {
+          const n = str.codePointAt(i) > 0xffff ? 2 : 1;
+          const ch = str.slice(i, i + n);
+          range.setStart(t, i);
+          range.setEnd(t, i + n);
+          i += n - 1;
+          if (!ch.trim()) continue;
+          const r = range.getBoundingClientRect();
+          if (!r.width) continue;
+          const p = loc(r);
+          ctx.fillText(ch, p.x, p.y + p.h / 2);
+        }
+      }
+    };
+
+    // 線（画面と同じく段の帯より下に描く）
+    for (const g of els.wires.children) {
+      ctx.save();
+      ctx.globalAlpha = Number(getComputedStyle(g).opacity);
+      const path = g.querySelector('path'), ps = getComputedStyle(path);
+      ctx.strokeStyle = cc(ps.stroke);
+      ctx.lineWidth = parseFloat(ps.strokeWidth) || 1.25;
+      ctx.setLineDash(ps.strokeDasharray === 'none' ? [] : ps.strokeDasharray.split(/[\s,]+/).map(parseFloat));
+      ctx.lineCap = ps.strokeLinecap || 'butt';
+      ctx.stroke(new Path2D(path.getAttribute('d')));
+      const poly = g.querySelector('polygon'), pls = getComputedStyle(poly);
+      ctx.setLineDash([]);
+      ctx.fillStyle = cc(pls.fill);
+      const pts = poly.getAttribute('points').trim().split(/\s+/).map((pt) => pt.split(',').map(Number));
+      ctx.beginPath();
+      pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+      ctx.closePath();
+      ctx.fill();
+      if (pls.stroke !== 'none') { ctx.strokeStyle = cc(pls.stroke); ctx.lineWidth = parseFloat(pls.strokeWidth) || 1; ctx.stroke(); }
+      const c = g.querySelector('circle');
+      ctx.fillStyle = cc(getComputedStyle(c).fill);
+      ctx.beginPath();
+      ctx.arc(Number(c.getAttribute('cx')), Number(c.getAttribute('cy')), 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // グループの枠と見出し
+    for (const grp of els.rows.querySelectorAll('.grp')) {
+      const r = loc(grp.getBoundingClientRect()), cs = getComputedStyle(grp);
+      fillGradient(grp, r, 0);
+      ctx.strokeStyle = cc(cs.borderTopColor);
+      ctx.lineWidth = 1;
+      ctx.setLineDash(cs.borderTopStyle === 'dashed' ? [4, 3] : []);
+      ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+      ctx.setLineDash([]);
+      if (cs.borderLeftStyle !== 'dashed') {
+        ctx.fillStyle = cc(cs.borderLeftColor);
+        ctx.fillRect(r.x, r.y, parseFloat(cs.borderLeftWidth) || 0, r.h);
+      }
+      drawText(grp.querySelector('.grp-h'));
+    }
+    for (const t of els.rows.querySelectorAll('.tools')) {
+      const r = loc(t.getBoundingClientRect()), ts = getComputedStyle(t), left = parseFloat(ts.borderLeftWidth) > 0;
+      ctx.strokeStyle = cc(left ? ts.borderLeftColor : ts.borderTopColor);
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      if (left) { ctx.moveTo(r.x + 0.5, r.y); ctx.lineTo(r.x + 0.5, r.y + r.h); } else { ctx.moveTo(r.x, r.y + 0.5); ctx.lineTo(r.x + r.w, r.y + 0.5); }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      drawText(t.querySelector('.tools-h'));
+    }
+    // 箱
+    for (const el of els.rows.querySelectorAll('.node')) {
+      const r = loc(el.getBoundingClientRect()), cs = getComputedStyle(el);
+      const radius = parseFloat(cs.borderTopLeftRadius) || 0;
+      ctx.save();
+      ctx.globalAlpha = Number(cs.opacity);
+      ctx.fillStyle = cc(cs.backgroundColor);
+      box(r, radius);
+      ctx.fill();
+      fillGradient(el, r, radius);
+      ctx.strokeStyle = cc(cs.borderTopColor);
+      ctx.lineWidth = el.classList.contains('sel') ? 2 : 1;
+      ctx.setLineDash(cs.borderTopStyle === 'dashed' ? [4, 3] : []);
+      ctx.beginPath();
+      ctx.roundRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1, radius);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const before = getComputedStyle(el, '::before');
+      if (before.content !== 'none') {
+        ctx.save();
+        ctx.globalAlpha *= Number(before.opacity);
+        ctx.strokeStyle = cc(before.borderTopColor);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(r.x, r.y + 11); ctx.lineTo(r.x, r.y); ctx.lineTo(r.x + 11, r.y);
+        ctx.moveTo(r.x + r.w - 11, r.y + r.h); ctx.lineTo(r.x + r.w, r.y + r.h); ctx.lineTo(r.x + r.w, r.y + r.h - 11);
+        ctx.stroke();
+        ctx.restore();
+      }
+      for (const pill of el.querySelectorAll('.svc, .out')) {
+        const pr = loc(pill.getBoundingClientRect()), ps = getComputedStyle(pill);
+        ctx.fillStyle = cc(ps.backgroundColor);
+        ctx.fillRect(pr.x, pr.y, pr.w, pr.h);
+        ctx.strokeStyle = cc(ps.borderTopColor);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(pr.x + 0.5, pr.y + 0.5, pr.w - 1, pr.h - 1);
+      }
+      const meterEl = el.querySelector('.meter');
+      if (meterEl) {
+        const mr = loc(meterEl.getBoundingClientRect()), ms = getComputedStyle(meterEl);
+        const pct = parseFloat(ms.getPropertyValue('--p')) / 100 || 0;
+        const col = cc(ms.getPropertyValue('--c').trim());
+        const seg = mr.w / 10;
+        for (let k = 0; k < 10; k++) {
+          const sx = mr.x + seg * k, sw = seg - 2;
+          const filled = Math.max(0, Math.min(sw, mr.x + mr.w * pct - sx));
+          ctx.globalAlpha = Number(cs.opacity) * 0.16;
+          ctx.fillStyle = col;
+          ctx.fillRect(sx + filled, mr.y, sw - filled, mr.h);
+          ctx.globalAlpha = Number(cs.opacity);
+          if (filled > 0) ctx.fillRect(sx, mr.y, filled, mr.h);
+        }
+      }
+      drawText(el);
+      ctx.restore();
+    }
+    // 表示中の線ラベル
+    for (const t of els.labels.querySelectorAll('.wl.on')) {
+      const r = loc(t.getBoundingClientRect()), cs = getComputedStyle(t);
+      ctx.fillStyle = cc(cs.backgroundColor);
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = cc(cs.borderTopColor);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+      drawText(t);
+    }
+    return cv;
+  }
+  async function exportPNG() {
+    await document.fonts?.ready;
+    document.documentElement.classList.add('no-anim');
+    let cv;
+    try { cv = exportCanvas(); } finally { document.documentElement.classList.remove('no-anim'); }
+    if (!cv) return;
+    cv.toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${(project.name || 'arch-map').replace(/[\\/:*?"<>|\s]+/g, '_')}_${state.view}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }, 'image/png');
+  }
+
+  /* ── events ── */
+  els.tabs.addEventListener('click', (ev) => { const t = ev.target.closest('[data-view]'); if (t) setView(t.dataset.view); });
+  els.stage.addEventListener('click', (ev) => {
+    if (pan.suppress) return;
+    const b = ev.target.closest('.node');
+    select(b && state.sel !== b.dataset.id ? b.dataset.id : null);
+  });
+  els.panel.addEventListener('click', (ev) => {
+    const t = ev.target.closest('[data-go]');
+    if (t) go(t.dataset.go);
+    const e = ev.target.closest('[data-edit]');
+    if (e) startEdit(e.dataset.edit);
+  });
+  els.save.addEventListener('click', save);
+  addEventListener('beforeunload', (ev) => { if (renames.size) { ev.preventDefault(); ev.returnValue = true; } });
+  addEventListener('keydown', (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey || ev.target.closest?.('input')) return;
+    if (ev.key === ' ' && pan.over && !ev.target.closest?.('button')) { ev.preventDefault(); pan.space = true; els.stage.classList.add('space'); return; }
+    const v = VIEWS.find((x) => x.key === ev.key);
+    if (v) setView(v.id);
+    else if (ev.key === 'Escape') select(null);
+    else if (ev.key === '+' || ev.key === '=') zoomBy(1.2);
+    else if (ev.key === '-') zoomBy(1 / 1.2);
+    else if (ev.key === '0') zoomBy(1 / cam.z);
+    else if (ev.key === 'f') fitView(true);
+    else if (ev.key === 'h') home();
+    else if (ev.key === 'r') toggleDir();
+    else if (ev.key === 't') toggleTheme();
+    else if (ev.key === 'p') exportPNG();
+    else if (ev.key === 'i') setInsp(els.app.classList.contains('insp-off'));
+  });
+  addEventListener('keyup', (ev) => { if (ev.key === ' ') { pan.space = false; els.stage.classList.remove('space'); } });
+  addEventListener('hashchange', () => { readHash(); renderAll(); });
+  let raf = 0;
+  const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawWires(); applyZoom(); }); };
+  new ResizeObserver(redraw).observe(els.rows);
+  new ResizeObserver(() => applyZoom()).observe(els.stage);
+  document.fonts?.ready.then(() => { drawWires(); if (cam.touched) applyZoom(); else { fitView(false); if (state.sel) reveal(state.sel); } });
+  if (!reduceMotion) {
+    let f = 0;
+    setInterval(() => { f = (f + 1) % SPIN.length; for (const s of document.querySelectorAll('.spin')) s.textContent = SPIN[f]; }, 90);
+  }
+
+  readHash();
+  renderAll();
+  fitView(false);
+  if (state.sel) reveal(state.sel);
+})();
+</script>
+</body>
+</html>
