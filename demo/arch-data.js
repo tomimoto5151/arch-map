@@ -5,7 +5,7 @@ window.ARCH_MAP = {
     "name": "みんなのレシピ",
     "summary": "料理のレシピを投稿・検索できるWebアプリです。ブラウザに映る画面と、Vercel で動く Next.js のサーバーが中心で、写真の保存やメール送信はクラウドのサービスを借りています。",
     "updated": "2026-10-03",
-    "commit": "d3e9095"
+    "commit": "00d37f2"
   },
   "groups": [
     {"id": "people", "name": "使う人", "desc": "アプリを使う人たち", "color": "gray"},
