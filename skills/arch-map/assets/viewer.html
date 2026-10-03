@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arch-map-viewer" content="30">
+<meta name="arch-map-viewer" content="31">
 <title>アーキテクチャ図</title>
 <script>try { const t = localStorage.getItem('arch-map-theme'); if (t) document.documentElement.dataset.theme = t; } catch { /* 保存できない環境では OS の設定に従う */ }</script>
 <!-- arch-map スキルのテンプレートです。このファイルは編集しないでください（図の中身は arch-data.js）。
@@ -708,15 +708,10 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     const used = [...new Set(core.flatMap(stepsOf))].sort((a, b) => a - b);
     const lanes = groups.filter((g) => !g.tool && core.some((n) => gid(n) === g.id));
     const inCell = (g, st) => vis.filter((n) => gid(n) === g.id && stepsOf(n).includes(st));
-    // 1 つの帯・1 つの段に箱が CELL 個を超えたら、同じ段の中で次の列（縦の流れでは次の行）へ折り返す。
-    // 折り返した列も段と同じく 1 本のトラックにするので、間隔と線の通り道は段と同じに扱える
-    const CELL = 3;
-    const tracks = used.flatMap((st) => {
-      const k = Math.max(1, ...lanes.map((g) => Math.ceil(inCell(g, st).length / CELL)));
-      return Array.from({ length: k }, (_, i) => ({ st, i }));
-    });
-    // トラックの間には、それぞれ幅を変えられる間隔のトラックを挟む（トラック j は 2j+1 番目）
-    const posOf = (st, i) => 2 * tracks.findIndex((t) => t.st === st && t.i === i) + 1;
+    // 同じ帯・同じ段の箱（並んで存在する機能）は、1 つのまとまりとして積む（横の流れでは縦に、縦の流れでは横に）
+    const tracks = used.map((st) => ({ st }));
+    // 段の間には、それぞれ幅を変えられる間隔のトラックを挟む（段 j は 2j+1 番目のトラック）
+    const posOf = (st) => 2 * used.indexOf(st) + 1;
     const tools = toolSection(vis, v);
     els.rows.classList.add('flow');
     els.rows.classList.toggle('h', horiz);
@@ -738,14 +733,13 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       els.rows.append(frame);
       for (const st of used) {
         const list = inCell(g, st);
-        for (let i = 0; i * CELL < list.length; i++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.style[across] = String(li + 1);
-          cell.style[along] = String(posOf(st, i));
-          cell.append(...list.slice(i * CELL, (i + 1) * CELL).map((n) => nodeEl(n, v, st)));
-          els.rows.append(cell);
-        }
+        if (!list.length) continue;
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style[across] = String(li + 1);
+        cell.style[along] = String(posOf(st));
+        cell.append(...list.map((n) => nodeEl(n, v, st)));
+        els.rows.append(cell);
       }
     });
     if (tools) {
@@ -926,23 +920,23 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     const range = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
     const gaps = new Map();
-    const addSeg = (g, x1, x2) => {
-      const s = { x1, x2, y: 0, g };
+    const addSeg = (g, x1, x2, key) => {
+      const s = { x1, x2, y: 0, g, key };
       if (!gaps.has(g)) gaps.set(g, []);
       gaps.get(g).push(s);
       return s;
     };
     for (const w of wires) {
       const { A, B, kind } = w;
-      if (kind === 'u') { w.s1 = addSeg(A.line, w.sp.x, w.tp.x); continue; }
+      if (kind === 'u') { w.s1 = addSeg(A.line, w.sp.x, w.tp.x, `a:${w.ka}`); continue; }
       const down = kind === 'down';
       if (Math.abs(w.sp.x - w.tp.x) < 8 && w.sp.x > B.l + 8 && w.sp.x < B.r - 8) w.tp.x = w.sp.x;
       const g1 = down ? A.line : A.line - 1;
       const g2 = down ? B.line - 1 : B.line;
-      if (g1 === g2) { w.s1 = addSeg(g1, w.sp.x, w.tp.x); continue; }
+      if (g1 === g2) { w.s1 = addSeg(g1, w.sp.x, w.tp.x, `a:${w.ka}`); continue; }
       w.cx = findChannel(down ? range(A.line + 1, B.line - 1) : range(B.line + 1, A.line - 1), w.sp.x, w.tp.x);
-      w.s1 = addSeg(g1, w.sp.x, w.cx);
-      w.s2 = addSeg(g2, w.cx, w.tp.x);
+      w.s1 = addSeg(g1, w.sp.x, w.cx, `a:${w.ka}`);
+      w.s2 = addSeg(g2, w.cx, w.tp.x, `b:${w.kb}`);
     }
 
     // 同じ隙間を通る横線は高さ（レーン）をずらす。ラベルが箱にかからないよう、
@@ -950,11 +944,22 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     // 横の流れで、ラベルを帯の境目に置けない線（同じ帯の中を進む線）があれば、その隙間はラベルの幅まで広げる
     let deficit = -Infinity;
     const dir = (s) => Math.sign(Math.round(s.x2 - s.x1));
+    const laneN = new Map();
+    const lo = (s) => Math.min(s.x1, s.x2) - 12, hi = (s) => Math.max(s.x1, s.x2) + 12;
     for (const [g, segs] of gaps) {
-      const [y0, y1] = gapRange(g, segs.length);
       segs.sort((a, b) => dir(b) - dir(a) || (dir(a) > 0 ? b.x1 - a.x1 : a.x1 - b.x1));
-      segs.forEach((s, i) => { s.y = y0 + ((y1 - y0) * (i + 1)) / (segs.length + 1); });
-      if (g + 1 < lines.length && y1 > y0) deficit = Math.max(deficit, LANE * (segs.length + 1) - (y1 - y0));
+      // 範囲が重ならない線どうしと、同じ箱から出る（同じ箱へ入る）線どうしは、同じレーンを使って隙間を詰める
+      const lanes = [];
+      for (const sg of segs) {
+        let L = lanes.find((l) => l.every((t) => t.key === sg.key || hi(t) < lo(sg) || hi(sg) < lo(t)));
+        if (!L) { L = []; lanes.push(L); }
+        L.push(sg);
+        sg.lane = lanes.indexOf(L);
+      }
+      laneN.set(g, lanes.length);
+      const [y0, y1] = gapRange(g, lanes.length);
+      segs.forEach((sg) => { sg.y = y0 + ((y1 - y0) * (sg.lane + 1)) / (lanes.length + 1); });
+      if (g + 1 < lines.length && y1 > y0) deficit = Math.max(deficit, LANE * (lanes.length + 1) - (y1 - y0));
     }
     // 横の流れのラベルは、線の縦の部分が横切る帯の境目のうち、真ん中に近いものに置く。
     // 境目の横に箱があってラベルがかかる場合（右端の道具の区画など）は、その境目を使わない
@@ -977,7 +982,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       if (H) for (const w of wires) if (w.e.label && !seamOf(w)) labelNeed.set(w.s1.g, Math.max(labelNeed.get(w.s1.g) || 0, widthOf(w.e.label) + 16));
       let changed = false;
       for (let g = 0; g + 1 < lines.length; g++) {
-        const want = `${Math.max(32, LANE * ((gaps.get(g)?.length || 0) + 1), labelNeed.get(g) || 0)}px`;
+        const want = `${Math.max(32, LANE * ((laneN.get(g) || 0) + 1), labelNeed.get(g) || 0)}px`;
         if (els.rows.style.getPropertyValue(`--g${g}`) !== want) { els.rows.style.setProperty(`--g${g}`, want); changed = true; }
       }
       if (pass === 0 && changed) { drawWires(1); return; }
@@ -1005,7 +1010,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
           const i = pts.findIndex((p, k) => k < pts.length - 1 && Math.abs(p.y - s1.y) < 0.5 && Math.abs(pts[k + 1].y - s1.y) < 0.5);
           const p = { x: i < 0 ? pts[0].x : (pts[i].x + pts[i + 1].x) / 2, y: s1.y };
           if (H) {
-            const [y0, y1] = gapRange(s1.g, gaps.get(s1.g).length), half = widthOf(w.e.label) / 2 + 4;
+            const [y0, y1] = gapRange(s1.g, laneN.get(s1.g)), half = widthOf(w.e.label) / 2 + 4;
             p.y = Math.max(y0 + half, Math.min(y1 - half, p.y));
           }
           at = { ...real(p), nudge: H ? 'y' : 'x' };
@@ -1108,7 +1113,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
         || boxes.some((b) => r.left + dx < b.right && r.right + dx > b.left && r.top + dy < b.bottom && r.bottom + dy > b.top);
       const unit = alongY ? r.height + m : r.width + 4;
       let d = 0;
-      for (let k = 1; k <= 16 && busy(alongY ? 0 : d, alongY ? d : 0); k++) d = Math.ceil(k / 2) * (k % 2 ? 1 : -1) * unit;
+      for (let k = 1; k <= 60 && busy(alongY ? 0 : d, alongY ? d : 0); k++) d = Math.ceil(k / 2) * (k % 2 ? 1 : -1) * unit;
       if (busy(alongY ? 0 : d, alongY ? d : 0)) d = 0;
       const dx = alongY ? 0 : d, dy = alongY ? d : 0;
       t.style.translate = `${dx / cam.z}px ${dy / cam.z}px`;
