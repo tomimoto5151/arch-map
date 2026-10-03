@@ -5,7 +5,7 @@
 
 ## 最小の例
 
-React の画面・Express のサーバー・Supabase のデータベースでできた ToDo アプリ。グループ（流れに沿った帯）は「このアプリで実際に分かれているもの」で作り、利用者の入力（step 1）から、利用者が一覧を見るところ（step 7）まで、起きる順に描いている。
+React の画面・Express のサーバー・Supabase のデータベースでできた ToDo アプリ。グループ（流れに沿った帯）は「このアプリで実際に分かれているもの」で作り、利用者の入力（step 1）から一覧が出るところ（step 5）まで、各機能が初めて動く順に描いている。
 
 ```js
 window.ARCH_MAP = {
@@ -18,13 +18,13 @@ window.ARCH_MAP = {
     {"id": "supabase", "name": "Supabase", "desc": "借りているデータベース", "color": "green"}
   ],
   "nodes": [
-    {"id": "visitor", "group": "people", "step": [1, 7], "name": "利用者", "role": "ブラウザでやることを管理する",
+    {"id": "visitor", "group": "people", "step": 1, "name": "利用者", "role": "ブラウザでやることを管理する",
      "detail": "やることを登録したり、終わったものに印を付けたりする人です。", "analogy": "メモ帳の持ち主です。", "actor": true},
     {"id": "web", "group": "browser", "step": 2, "name": "ToDo画面", "role": "やることの入力欄",
      "detail": "新しいやることを入力する画面です。保存はサーバーに頼みます。",
      "analogy": "冷蔵庫に貼ったメモです。",
      "plan": {"tech": "React"}, "built": {"tech": "React", "files": ["src/App.tsx"]}},
-    {"id": "api", "group": "server", "step": [3, 5], "name": "APIサーバー", "role": "画面からの注文を受ける",
+    {"id": "api", "group": "server", "step": 3, "name": "APIサーバー", "role": "画面からの注文を受ける",
      "detail": "画面から「保存して」と頼まれて、データベースに書き込み、新しい一覧を返します。",
      "analogy": "お店のレジ係です。",
      "plan": {"tech": "Express"}, "built": {"tech": "Express", "progress": 0.6, "files": ["server/index.js"]}},
@@ -33,7 +33,7 @@ window.ARCH_MAP = {
      "analogy": "書類をしまう引き出しです。",
      "service": {"name": "Supabase", "provider": "Supabase", "docs": "https://supabase.com/docs", "env": ["SUPABASE_URL", "SUPABASE_ANON_KEY"]},
      "plan": {"tech": "Supabase（PostgreSQL）"}},
-    {"id": "list", "group": "browser", "step": 6, "name": "やること一覧", "role": "保存されたやることが並ぶ", "output": true,
+    {"id": "list", "group": "browser", "step": 5, "name": "やること一覧", "role": "保存されたやることが並ぶ", "output": true,
      "detail": "サーバーから返ってきたやることが、新しい順に画面に並びます。利用者が最後に目にするものです。",
      "analogy": "冷蔵庫に貼り直されたメモの束です。",
      "plan": {"tech": "React"}, "built": {"tech": "React", "files": ["src/TodoList.tsx"]}}
@@ -42,7 +42,8 @@ window.ARCH_MAP = {
     {"from": "visitor", "to": "web", "label": "やることを入力する"},
     {"from": "web", "to": "api", "label": "保存を頼む"},
     {"from": "api", "to": "db", "label": "書き込む"},
-    {"from": "api", "to": "list", "label": "新しい一覧を返す", "kind": "result"},
+    {"from": "db", "to": "api", "label": "新しい一覧を返す", "kind": "result"},
+    {"from": "api", "to": "list", "label": "一覧を描いてもらう", "kind": "result"},
     {"from": "list", "to": "visitor", "label": "一覧を見る", "kind": "result"}
   ],
   "glossary": [{"term": "API", "desc": "画面とサーバーがやりとりするための注文の受付窓口です。"}],
@@ -50,7 +51,7 @@ window.ARCH_MAP = {
 };
 ```
 
-`api` は step 3 で注文を受け、step 5 で一覧を返すので `[3, 5]`。`visitor` は step 1 で入力し、step 7 で一覧を見るので `[1, 7]`。線は、時間が先へ進む組み合わせで自動的につながる。
+箱は機能ごとに 1 つだけ置く。`db` から `api`、`list` から `visitor` への線のように、前の段の機能にもう一度戻るところは、戻る矢印で描かれる（`api` や `visitor` をもう一度描かない）。
 
 ## 項目
 
@@ -84,7 +85,7 @@ window.ARCH_MAP = {
 ### nodes（必須） — 箱
 - `id` 英小文字・数字・`-` `_`。**計画と実装で同じものは同じ id**
 - `group` 所属するグループ（列）の id
-- `step` 何番目に起きるか（1 から）。図はこの順に並ぶ（横の流れなら左から右、縦の流れなら上から下）。同じ箱が流れの中で 2 回出てくるときは配列（`[3, 10]`）。同時に起きることは同じ step でよい
+- `step` その機能が初めて動く順番（1 から。1 つの整数）。図はこの順に並ぶ（横の流れなら左から右、縦の流れなら上から下）。同じ箱は 1 回だけ置き、もう一度その機能に戻るところは戻る線で描く。同時に起きることは同じ step でよい
 - `name` 日本語 2〜10 字（箱の見出し）。API・CSV のような略語は混ぜてよい。サービス名は `service` に書く
 - `role` 箱に出るひとこと（24 字以内）
 - `detail` くわしい説明。専門用語を避けて 2〜3 文、です・ます調
@@ -118,7 +119,7 @@ window.ARCH_MAP = {
 - `label` 何を頼むか。短い動詞句（「データを頼む」「写真を保存する」）
 - `kind` 結果が返っていく・出力される流れなら `"result"`（点線と白抜きの矢印で描かれる）。省略すると「頼む」線。結果が組み立てられた箱から最後の出力の箱を通って、受け取る人まで。主な道筋だけに付ける
 - `only` 片方の図だけに出す線なら `"plan"` か `"built"`（省略すると、両端の箱がある図すべてに出る。計画だけの箱への線に `only` は要らない）
-- 線は前の step から後の step へ。逆戻りする線は ⚠ が出るので、戻り先の箱を後の step にも置く
+- 線はふつう前の step から後の step へ。もう一度前の機能に戻るところ（結果を返す・続きを頼む）は、後ろの step から前の step への線にする（戻る矢印で描かれる）
 - 同じ step の箱どうしの線も引ける（下の隙間を回って描かれる）
 
 ### glossary — 用語ミニ辞典（右パネルに出る）
@@ -131,3 +132,4 @@ window.ARCH_MAP = {
 ### 旧形式について
 `"version": 1` の `layers` / `layer` で書かれたデータは、仕上げのスクリプトが自動で `groups` / `group`（version 2）に書き換える。
 `step` のない図は、グループを横の段（`row` で上下、`cols` で 1 行の箱の数）として並べる従来の描き方で表示される。新しく書くときは `step` を使う。
+`step` が配列（同じ箱を複数の段に置く古い形式）のデータは、仕上げのスクリプトが最初の段だけに直す。

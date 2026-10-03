@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arch-map-viewer" content="23">
+<meta name="arch-map-viewer" content="30">
 <title>アーキテクチャ図</title>
 <script>try { const t = localStorage.getItem('arch-map-theme'); if (t) document.documentElement.dataset.theme = t; } catch { /* 保存できない環境では OS の設定に従う */ }</script>
 <!-- arch-map スキルのテンプレートです。このファイルは編集しないでください（図の中身は arch-data.js）。
@@ -34,7 +34,7 @@
   --gray:#a6a2bb;
   --ok:#5fd4a4;
   --run:#6f9cff;
-  --todo:#7f7a9a;
+  --todo:#ff9640;
   --extra:#ecd06a;
   --bad:#ff6b6b;
   --font:"JetBrains Mono", "M PLUS 1 Code", ui-monospace, "SF Mono", Menlo, "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
@@ -83,7 +83,7 @@
   --gray:#6f6759;
   --ok:#526d33;
   --run:#3c6584;
-  --todo:#9a907d;
+  --todo:#c2571a;
   --extra:#a07a12;
   --bad:#ad3a2c;
   --haze-1:rgba(156,74,38,.05);
@@ -130,7 +130,7 @@
     --gray:#6f6759;
     --ok:#526d33;
     --run:#3c6584;
-    --todo:#9a907d;
+    --todo:#c2571a;
     --extra:#a07a12;
     --bad:#ad3a2c;
     --haze-1:rgba(156,74,38,.05);
@@ -161,7 +161,7 @@ body{margin:0;height:100%;color:var(--text);font-family:var(--font);font-size:13
   background:var(--grain),radial-gradient(1100px 560px at 82% -12%,var(--haze-1),transparent 62%),radial-gradient(900px 520px at -5% 8%,var(--haze-2),transparent 60%),var(--bg-0);background-attachment:fixed}
 button{font:inherit;color:inherit}
 code,kbd{font:inherit}
-.app{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh}
+.app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh}
 :is(.tab,.node,.go,.back,.hud button,.icon,.ttl):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
 /* ── top bar（1 段にまとめる） ── */
@@ -217,6 +217,11 @@ code,kbd{font:inherit}
 .rows{position:relative;z-index:1;display:flex;flex-direction:column;gap:var(--gap-y)}
 .hud{position:absolute;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 12px;font-size:12px;color:var(--text-2);background:var(--sf-hud);border:1px solid var(--bd-2);border-radius:6px}
 .hud-tl{top:12px;left:12px;max-width:calc(100% - 200px)}
+/* 帯の見出しの固定表示: 見出しが画面の外へ出たら、画面の端（横の流れは左端、縦の流れは上端）に貼り付けて出す */
+.lanebar{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.lanebar .lh{position:absolute;display:flex;flex-direction:column;justify-content:flex-start;gap:2px;overflow:hidden;padding:6px 10px;font-size:11px;line-height:1.4;color:var(--text-2);background:color-mix(in srgb,var(--bg-1) 90%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent);border-left:2px solid var(--c);box-shadow:0 4px 12px -6px rgba(0,0,0,.35)}
+.lanebar .lh b{color:var(--c);font-size:12px}
+.lanebar .lh .idx{color:var(--c);opacity:.75;letter-spacing:.1em}
 .hud .stat{color:var(--text);font-weight:700}
 .hud button{min-width:36px;min-height:36px;padding:0 8px;font-size:12px;color:var(--text-2);background:none;border:0;border-radius:3px;cursor:pointer;transition:color .15s ease-out,background-color .15s ease-out}
 .hud button:hover{color:var(--text);background:var(--bg-3)}
@@ -438,6 +443,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
           </div>
         </div>
       </div>
+      <div class="lanebar" id="lanebar" aria-hidden="true"></div>
       <div class="hud hud-tl"><span class="stat" id="stat"></span><span class="legend" id="legend"></span></div>
       <button type="button" class="hud insp-open" id="insp-open"><span>« 詳細パネル</span></button>
       <div class="hud zoom" id="zoom" role="group" aria-label="拡大と縮小">
@@ -476,7 +482,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
   const els = {
     path: $('#path'), meta: $('#meta'), cmd: $('#cmd'), tabs: $('#tabs'), legend: $('#legend'), stat: $('#stat'),
     stage: $('#stage'), sizer: $('#sizer'), canvas: $('#canvas'), wires: $('#wires'), labels: $('#labels'), rows: $('#rows'),
-    zoom: $('#zoom'), zoomV: $('#zoom-v'), dir: $('#dir'),
+    zoom: $('#zoom'), zoomV: $('#zoom-v'), dir: $('#dir'), lanebar: $('#lanebar'),
     insp: $('#insp'), inspT: $('#insp-t'), inspK: $('#insp-k'), panel: $('#panel'),
     app: $('#app'), inspOpen: $('#insp-open'), inspClose: $('#insp-close'), fs: $('#fs'), theme: $('#theme'), mode: $('#mode'),
     savebar: $('#savebar'), saveT: $('#save-t'), save: $('#save'),
@@ -540,7 +546,11 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
 
   const clamp01 = (x) => Math.max(0, Math.min(1, Number(x) || 0));
   const isTool = (n) => groupById.get(gid(n))?.tool === true;
-  const stepsOf = (n) => (Array.isArray(n.step) ? n.step : [n.step]).filter((x) => Number.isInteger(x) && x > 0);
+  // 箱は 1 つの段にだけ置く。同じ箱をもう一度使うところは、その箱へ戻る矢印で描く（古いデータの step の配列は、最初の段を使う）
+  const stepsOf = (n) => {
+    const st = (Array.isArray(n.step) ? n.step : [n.step]).filter((x) => Number.isInteger(x) && x > 0);
+    return st.length ? [Math.min(...st)] : [];
+  };
   const groupColor = (g) => `var(--${COLORS.has(g?.color) ? g.color : 'gray'})`;
   const safeUrl = (u) => (typeof u === 'string' && /^https:\/\//.test(u) ? u : '');
   const inView = (n, v) => (n.actor || v === 'diff' ? true : v === 'plan' ? !!n.plan : !!n.built);
@@ -620,7 +630,8 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     els.legend.innerHTML = state.view === 'diff'
       ? Object.values(STATUS).map((s) => `<span class="lg" style="--c:${s.color}"><i class="bar"></i>${s.mark} ${s.label}</span>`).join('')
         + '<span class="lg" style="--c:var(--bad)"><i class="bar"></i>✕ 要確認</span><span class="lg">△ 技術を変更</span>'
-      : groups.map((g) => `<span class="lg" style="--c:${groupColor(g)}"><i class="bar"></i>${esc(g.name)}</span>`).join('');
+      : groups.filter((g) => nodes.some((n) => gid(n) === g.id && inView(n, state.view)))
+        .map((g) => `<span class="lg" style="--c:${groupColor(g)}"><i class="bar"></i>${esc(g.name)}</span>`).join('');
     if (edges.some((e) => e.kind === 'result' && edgeInView(e, state.view))) els.legend.innerHTML += '<span class="lg"><i class="dots"></i>結果の流れ</span>';
     if (nodes.some((n) => n.output && inView(n, state.view))) els.legend.innerHTML += '<span class="lg">⇥ 最後の出力</span>';
     if (nodes.some((n) => isTool(n) && inView(n, state.view))) els.legend.innerHTML += '<span class="lg">⚒ 実装用の道具</span>';
@@ -695,17 +706,25 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
   function renderFlow(vis, v) {
     const core = vis.filter((n) => !isTool(n));
     const used = [...new Set(core.flatMap(stepsOf))].sort((a, b) => a - b);
-    // 段の間には、それぞれ幅を変えられる間隔のトラックを挟む（段 i は 2i+1 番目のトラック）
-    const posOf = new Map(used.map((st, i) => [st, 2 * i + 1]));
     const lanes = groups.filter((g) => !g.tool && core.some((n) => gid(n) === g.id));
+    const inCell = (g, st) => vis.filter((n) => gid(n) === g.id && stepsOf(n).includes(st));
+    // 1 つの帯・1 つの段に箱が CELL 個を超えたら、同じ段の中で次の列（縦の流れでは次の行）へ折り返す。
+    // 折り返した列も段と同じく 1 本のトラックにするので、間隔と線の通り道は段と同じに扱える
+    const CELL = 3;
+    const tracks = used.flatMap((st) => {
+      const k = Math.max(1, ...lanes.map((g) => Math.ceil(inCell(g, st).length / CELL)));
+      return Array.from({ length: k }, (_, i) => ({ st, i }));
+    });
+    // トラックの間には、それぞれ幅を変えられる間隔のトラックを挟む（トラック j は 2j+1 番目）
+    const posOf = (st, i) => 2 * tracks.findIndex((t) => t.st === st && t.i === i) + 1;
     const tools = toolSection(vis, v);
     els.rows.classList.add('flow');
     els.rows.classList.toggle('h', horiz);
-    const steps = used.map((_, i) => (i < used.length - 1 ? `auto var(--g${i}, 32px)` : 'auto')).join(' ');
+    const steps = tracks.map((_, j) => (j < tracks.length - 1 ? `auto var(--g${j}, 32px)` : 'auto')).join(' ');
     const lanesT = horiz ? `repeat(${lanes.length}, auto)` : `repeat(${lanes.length}, max-content)`;
     // 横の流れでは、右端の道具の区画の手前にも間隔のトラックを置く（道具へ向かう線のラベルを収める）
-    const toolPos = horiz && tools ? used.length * 2 + 1 : used.length * 2;
-    els.rows.style.gridTemplateColumns = horiz ? `${steps}${tools ? ` var(--g${used.length - 1}, 32px) auto` : ''}` : lanesT;
+    const toolPos = horiz && tools ? tracks.length * 2 + 1 : tracks.length * 2;
+    els.rows.style.gridTemplateColumns = horiz ? `${steps}${tools ? ` var(--g${tracks.length - 1}, 32px) auto` : ''}` : lanesT;
     els.rows.style.gridTemplateRows = horiz ? lanesT : `${steps} auto`;
     // along = 流れ（段）の向きのトラック、across = 帯を並べる向きのトラック
     const along = horiz ? 'gridColumn' : 'gridRow', across = horiz ? 'gridRow' : 'gridColumn';
@@ -714,18 +733,19 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       frame.className = 'grp lane';
       frame.style.setProperty('--c', groupColor(g));
       frame.style[across] = String(li + 1);
-      frame.style[along] = `1 / ${used.length * 2}`;
+      frame.style[along] = `1 / ${tracks.length * 2}`;
       frame.innerHTML = `<div class="grp-h"><span class="idx">${String(li + 1).padStart(2, '0')}</span><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div>`;
       els.rows.append(frame);
       for (const st of used) {
-        const list = vis.filter((n) => gid(n) === g.id && stepsOf(n).includes(st));
-        if (!list.length) continue;
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.style[across] = String(li + 1);
-        cell.style[along] = String(posOf.get(st));
-        cell.append(...list.map((n) => nodeEl(n, v, st)));
-        els.rows.append(cell);
+        const list = inCell(g, st);
+        for (let i = 0; i * CELL < list.length; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style[across] = String(li + 1);
+          cell.style[along] = String(posOf(st, i));
+          cell.append(...list.slice(i * CELL, (i + 1) * CELL).map((n) => nodeEl(n, v, st)));
+          els.rows.append(cell);
+        }
       }
     });
     if (tools) {
@@ -878,7 +898,8 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       });
     }
 
-    // 段を飛ばす線は、途中の段の箱の隙間（チャンネル）を縦に通す
+    // 段を飛ばす線は、途中の段の箱の隙間（チャンネル）を縦に通す。同じチャンネルを何本も通るときは 6px ずつずらし、
+    // ずらした先が箱にかかるなら、次に近いチャンネルを使う
     const chanUse = new Map();
     const findChannel = (mids, x1, x2) => {
       const cands = [x1, x2, (x1 + x2) / 2];
@@ -887,18 +908,20 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
         cands.push(it[0].l - 16, it[it.length - 1].r + 16);
         for (let i = 0; i < it.length - 1; i++) cands.push((it[i].r + it[i + 1].l) / 2);
       }
-      let best = null, bestCost = Infinity;
-      for (const x of cands) {
-        if (x < colL + 4 || x > colR - 4) continue;
-        if (!mids.every((li) => lines[li].items.every((b) => x < b.l - 6 || x > b.r + 6))) continue;
-        const cost = Math.abs(x - x1) + Math.abs(x - x2);
-        if (cost < bestCost) { bestCost = cost; best = x; }
+      const free = (x) => x >= colL + 4 && x <= colR - 4 && mids.every((li) => lines[li].items.every((b) => x < b.l - 6 || x > b.r + 6));
+      const cost = (x) => Math.abs(x - x1) + Math.abs(x - x2);
+      const bases = [...new Set(cands.map((x) => Math.round(x)))].filter(free).sort((a, b) => cost(a) - cost(b));
+      for (const base of bases) {
+        const used = chanUse.get(base) || 0;
+        for (let k = used; k < used + 6; k++) {
+          const x = base + Math.ceil(k / 2) * 6 * (k % 2 ? 1 : -1);
+          if (free(x)) { chanUse.set(base, k + 1); return x; }
+        }
       }
-      if (best === null) best = colR + 8;
-      const key = Math.round(best);
-      const used = chanUse.get(key) || 0;
-      chanUse.set(key, used + 1);
-      return best + Math.ceil(used / 2) * 6 * (used % 2 ? 1 : -1);
+      // どこにも通れなければ、図の外側を回る
+      const out = Math.round(colR + 8), used = chanUse.get(out) || 0;
+      chanUse.set(out, used + 1);
+      return out + used * 6;
     };
     const range = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
@@ -935,7 +958,10 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     }
     // 横の流れのラベルは、線の縦の部分が横切る帯の境目のうち、真ん中に近いものに置く。
     // 境目の横に箱があってラベルがかかる場合（右端の道具の区画など）は、その境目を使わない
+    // 道具の線は除く。道具の区画は帯をまたいで並ぶので、境目に置けるかどうかが、その手前の間隔の幅しだいで変わり、
+    // 間隔の幅とラベルの置き場所が互いに決め合って落ち着かなくなるため、いつも隙間の中に置く
     const seamOf = (w) => {
+      if (isTool(nodeById.get(w.e.from)) || isTool(nodeById.get(w.e.to))) return null;
       const half = widthOf(w.e.label) / 2 + 4;
       for (const s of [w.s1, w.s2]) {
         if (!s) continue;
@@ -1068,21 +1094,23 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       g.classList.toggle('dim', !!id && !hit(g));
       if (hit(g)) els.wires.append(g);
     }
-    // 表示するラベル同士が重なったら、後のものを空きに沿ってずらす（段の隙間・帯の境目に沿って右へ。横の流れの隙間の中では下へ）
+    // 表示するラベル同士が重なったら、後のものを空きに沿ってずらす（段の隙間・帯の境目に沿って左右へ。横の流れの隙間の中では上下へ）。
+    // ずらした先が箱にかかるなら、反対側やもう一つ先を試す
     const m = flowH() ? 2 : 0;
+    const boxes = [...els.rows.querySelectorAll('.node')].map((b) => b.getBoundingClientRect());
     const placed = [];
     for (const t of els.labels.children) {
       t.classList.toggle('on', hit(t));
       t.style.translate = '';
       if (!hit(t)) continue;
-      const r = t.getBoundingClientRect();
-      let dx = 0, dy = 0;
-      for (let k = 0; k < 8; k++) {
-        const o = placed.find((p) => r.left + dx < p.right + 4 && r.right + dx > p.left - 4 && r.top + dy < p.bottom + m && r.bottom + dy > p.top - m);
-        if (!o) break;
-        if (t.dataset.nudge === 'y') dy = o.bottom + m - r.top;
-        else dx = o.right + 4 - r.left;
-      }
+      const r = t.getBoundingClientRect(), alongY = t.dataset.nudge === 'y';
+      const busy = (dx, dy) => placed.some((p) => r.left + dx < p.right + 4 && r.right + dx > p.left - 4 && r.top + dy < p.bottom + m && r.bottom + dy > p.top - m)
+        || boxes.some((b) => r.left + dx < b.right && r.right + dx > b.left && r.top + dy < b.bottom && r.bottom + dy > b.top);
+      const unit = alongY ? r.height + m : r.width + 4;
+      let d = 0;
+      for (let k = 1; k <= 16 && busy(alongY ? 0 : d, alongY ? d : 0); k++) d = Math.ceil(k / 2) * (k % 2 ? 1 : -1) * unit;
+      if (busy(alongY ? 0 : d, alongY ? d : 0)) d = 0;
+      const dx = alongY ? 0 : d, dy = alongY ? d : 0;
       t.style.translate = `${dx / cam.z}px ${dy / cam.z}px`;
       placed.push({ left: r.left + dx, right: r.right + dx, top: r.top + dy, bottom: r.bottom + dy });
     }
@@ -1151,13 +1179,14 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     if (issues.length) h += sec('要確認', `<ul class="ls">${issues.map((n) => `<li><button type="button" class="go bad-t" data-go="${esc(n.id)}">✕ ${esc(n.name)}</button>：${esc(n.built.issue)}</li>`).join('')}</ul>`);
     const H = flowH();
     h += sec('図の読み方', '<ul class="ls">'
-      + '<li>箱 ＝ 機能のまとまり。クリックすると、ここに説明が出ます</li>'
+      + '<li>箱 ＝ 機能。1 つの機能は 1 つの箱だけです。クリックすると、ここに説明が出ます</li>'
       + '<li>線 ＝ 「頼む側」から「頼まれる側」へ。矢印の先が頼まれる側です</li>'
       + '<li>点線 ＝ 結果が返っていく流れ。⇥ の箱が、利用者などが最後に受け取るものです</li>'
       + `<li>${H ? '右端' : '下'}の「⚒ 実装用の道具」＝ 作る・確かめるための道具。本番のサービスの中では動きません（一点鎖線でつながります）</li>`
-      + (H ? '<li>左から右へ ＝ 起きる順番。いちばん左が最初の入力、いちばん右が結果を受け取るところです</li>'
-        : '<li>上から下へ ＝ 起きる順番。いちばん上が最初の入力、いちばん下が結果を受け取るところです</li>')
-      + `<li>${H ? '横の帯' : '縦の枠'} ＝ 実際のまとまり（動く場所や部品）。同じ箱が 2 回出てくるのは、受け付けたあと結果を返すときなどです</li>`
+      + (H ? '<li>左から右へ ＝ 機能が初めて動く順番。いちばん左が最初の入力です</li>'
+        : '<li>上から下へ ＝ 機能が初めて動く順番。いちばん上が最初の入力です</li>')
+      + `<li>${H ? '右から左' : '下から上'}へ戻る矢印 ＝ 前の機能にもう一度戻るところ（結果を返す、続きを頼むなど）</li>`
+      + `<li>${H ? '横の帯' : '縦の枠'} ＝ 実際のまとまり（動く場所や部品）</li>`
       + '<li>◈ ＝ 外部のサービス（API など）を使っている箱。右のパネルにサービス名と必要な設定が出ます</li>'
       + '<li>スペースを押しながらドラッグ（空いている所なら普通のドラッグ、中ボタンでも可）で移動、ctrl＋ホイールで拡大・縮小。h で初期表示、f で全体を表示、r で図の向き（横・縦）を切り替え</li>'
       + '<li>キー 1・2・3 で表示を切り替え、Esc でここにもどります</li>'
@@ -1332,9 +1361,34 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
 
   /* ── canvas: 移動・拡大縮小できるキャンバス ── */
   const ZMIN = 0.3, ZMAX = 2;
+  // 大きな図でも全体が 1 画面に収まるよう、いちばん小さい倍率は図の大きさに合わせて ZMIN より下げる
+  const zMin = () => Math.max(0.02, Math.min(ZMIN, (els.stage.clientWidth - 16) / (els.canvas.offsetWidth || 1), (els.stage.clientHeight - 16) / (els.canvas.offsetHeight || 1)));
   const pan = { x: 0, y: 0, sl: 0, st: 0, dragged: false, suppress: false, space: false, over: false };
   // 図のまわりに表示枠の半分ずつ余白を取り、図が小さくても上下左右に動かせるようにする。
   // 枠の大きさが変わって余白が変わっても、見えている位置がずれないようスクロール量を補正する
+  // 帯の見出しが画面の外へ出たら、スプレッドシートの列固定のように画面の端へ貼り付けて出す（文字の大きさは拡大率によらない）
+  function updateLaneBar() {
+    const frames = [...els.rows.querySelectorAll('.grp.lane')];
+    const H = flowH(), S = els.stage.getBoundingClientRect(), L = els.lanebar.getBoundingClientRect(), W = 152;
+    // 左上の凡例とかぶらないよう、凡例の下から文字をはじめる（位置は貼り付ける層 L から測る）
+    const hud = els.legend.parentElement.getBoundingClientRect(), below = Math.max(S.top, hud.bottom + 8) - L.top;
+    els.lanebar.replaceChildren(...frames.flatMap((f) => {
+      const r = f.getBoundingClientRect();
+      const hidden = H ? r.left < S.left - 2 : r.top < S.top - 2;
+      const a = H ? Math.max(r.top, S.top) : Math.max(r.left, S.left), b = H ? Math.min(r.bottom, S.bottom) : Math.min(r.right, S.right);
+      if (!hidden || b - a < 16) return [];
+      const head = f.querySelector('.grp-h');
+      const el = document.createElement('div');
+      el.className = 'lh';
+      el.style.setProperty('--c', f.style.getPropertyValue('--c'));
+      el.innerHTML = `<span class="idx">${esc(head.querySelector('.idx')?.textContent)}</span><b>${esc(head.querySelector('b')?.textContent)}</b>`;
+      if (H) Object.assign(el.style, { left: `${S.left - L.left}px`, top: `${a - L.top}px`, width: `${W}px`, height: `${b - a}px`, paddingTop: `${Math.max(6, below - (a - L.top))}px` });
+      else Object.assign(el.style, { top: `${below}px`, left: `${a - L.left}px`, width: `${b - a}px` });
+      return [el];
+    }));
+  }
+  let laneRaf = 0;
+  els.stage.addEventListener('scroll', () => { cancelAnimationFrame(laneRaf); laneRaf = requestAnimationFrame(updateLaneBar); }, { passive: true });
   function applyZoom() {
     const padX = Math.round(els.stage.clientWidth / 2), padY = Math.round(els.stage.clientHeight / 2);
     const dx = padX - cam.padX, dy = padY - cam.padY;
@@ -1348,10 +1402,11 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     if (dx) els.stage.scrollLeft += dx;
     if (dy) els.stage.scrollTop += dy;
     els.zoomV.textContent = `${Math.round(cam.z * 100)}%`;
+    updateLaneBar();
   }
   // (cx, cy) は表示枠の中の点。その点の下にある図が動かないように拡大縮小する
   function zoomTo(z, cx = els.stage.clientWidth / 2, cy = els.stage.clientHeight / 2) {
-    const z1 = cam.z, z2 = Math.max(ZMIN, Math.min(ZMAX, z));
+    const z1 = cam.z, z2 = Math.max(zMin(), Math.min(ZMAX, z));
     const px = (els.stage.scrollLeft + cx - cam.padX) / z1;
     const py = (els.stage.scrollTop + cy - cam.padY) / z1;
     cam.z = z2;
@@ -1373,7 +1428,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       els.stage.scrollTop = cam.padY + Math.min(0, (h * cam.z - sh) / 2);
       return;
     }
-    cam.z = Math.max(all ? ZMIN : 0.6, Math.min(1, (sw - 16) / w, all ? (sh - 16) / h : 1));
+    cam.z = Math.max(all ? zMin() : 0.6, Math.min(1, (sw - 16) / w, all ? (sh - 16) / h : 1));
     applyZoom();
     els.stage.scrollLeft = cam.padX + (w * cam.z - sw) / 2;
     els.stage.scrollTop = all ? cam.padY + (h * cam.z - sh) / 2 : cam.padY;

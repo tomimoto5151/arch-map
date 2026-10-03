@@ -33,7 +33,7 @@ const SECRETS = [
 
 const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const DEV_ONLY = /開発者|開発用|開発ツール|developer|\beval\b|ベンチマーク|精度チェック/i;
-const stepsOf = (n) => (Array.isArray(n.step) ? n.step : n.step === undefined ? [] : [n.step]);
+const stepsOf = (n) => (n.step === undefined ? [] : [n.step]);
 const errors = [];
 const warns = [];
 const isObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
@@ -82,6 +82,15 @@ function migrate(D) {
     for (const n of D.nodes) if (isObj(n) && n.layer !== undefined && n.group === undefined) { n.group = n.layer; delete n.layer; changed = true; }
   }
   if (D.version === 1) { D.version = 2; changed = true; }
+  return changed;
+}
+
+// 同じ箱を複数の段に置く step の配列（旧形式）は、最初の段だけにする。もう一度その箱を使うところは、戻る矢印で描かれる
+function singleSteps(D) {
+  let changed = false;
+  for (const n of Array.isArray(D?.nodes) ? D.nodes : []) {
+    if (isObj(n) && Array.isArray(n.step) && n.step.length && n.step.every((x) => Number.isInteger(x) && x >= 1)) { n.step = Math.min(...n.step); changed = true; }
+  }
   return changed;
 }
 
@@ -152,7 +161,7 @@ function validate(D, body) {
     if (n.actor !== undefined && n.actor !== true) errors.push(`${at}.actor は true にするか、項目ごと消してください`);
     if (n.step !== undefined) {
       const st = stepsOf(n);
-      if (!st.length || !st.every((x) => Number.isInteger(x) && x >= 1) || new Set(st).size !== st.length) errors.push(`${at}.step は 1 以上の整数か、その配列（例: [1, 12]）にしてください`);
+      if (!st.every((x) => Number.isInteger(x) && x >= 1)) errors.push(`${at}.step は 1 以上の整数にしてください（箱は 1 つの段にだけ置き、もう一度使うところは戻る矢印で描く）`);
     }
     if (n.output !== undefined && n.output !== true) errors.push(`${at}.output は true にするか、項目ごと消してください`);
     if (n.actor && n.output) errors.push(`${at} は人（actor）なので output（最後の出力）にはできません。受け取るものを別の箱にしてください`);
@@ -183,6 +192,10 @@ function validate(D, body) {
       if (files !== undefined && !(Array.isArray(files) && files.every(isStr))) errors.push(`${at}.built.files は文字列の配列にしてください`);
     }
   });
+
+  const names = new Map();
+  for (const n of nodes) if (isObj(n) && isStr(n.name)) names.set(n.name, (names.get(n.name) || 0) + 1);
+  for (const [nm, c] of names) if (c > 1) warns.push(`「${nm}」という名前の箱が ${c} 個あります。名前で区別できるようにしてください`);
 
   const pairs = new Set();
   const has = (id, side) => byId.get(id)?.actor === true || isObj(byId.get(id)?.[side]);
@@ -215,22 +228,11 @@ function validate(D, body) {
   const isTool = (n) => isObj(n) && toolGroups.has(n.group);
   for (const [side, label] of [['plan', '計画'], ['built', '実装']]) {
     const vis = nodes.filter((n) => isObj(n) && !n.actor && !isTool(n) && isObj(n[side]));
-    if (vis.length > 18) warns.push(`${label}の箱が ${vis.length} 個あります（初心者向けには 15 個以内がおすすめ。まとめられる箱をまとめる）`);
-    for (const g of groups) {
-      const c = vis.filter((n) => n.group === g.id).length;
-      if (c > 8) warns.push(`${label}の「${g.name}」に箱が ${c} 個あります（8 個以内だと見やすい。中で分かれるなら別のグループに）`);
-    }
     // 起きる順の流れ（step）
     const all = nodes.filter((n) => isObj(n) && !isTool(n) && (n.actor || isObj(n[side])));
     const noStep = all.filter((n) => !stepsOf(n).length);
     if (!vis.length) { /* 人の箱しかない図は対象外 */ } else if (noStep.length === all.length) warns.push(`${label}の図に起きる順番（step）がありません。各箱に step を付けると、最初の入力から結果を受け取るところまで、起きる順の流れで描かれます`);
     else if (noStep.length) warns.push(`${label}の図で step がない箱があります（${noStep.map((n) => n.name).join('・')}）。全部の箱に付けると流れの図になります`);
-    else {
-      for (const e of edges.filter((x) => isObj(x) && byId.has(x.from) && byId.has(x.to) && !isTool(byId.get(x.from)) && !isTool(byId.get(x.to)) && shows(x, side))) {
-        const up = stepsOf(byId.get(e.from)).every((a) => stepsOf(byId.get(e.to)).every((b) => b < a));
-        if (up) warns.push(`${label}で「${byId.get(e.from).name}」→「${byId.get(e.to).name}」の線が流れを逆戻りしています。戻り先の箱を後の段にも置く（"step": [3, 12] のように）と、一方向の流れになります`);
-      }
-    }
     if (vis.length && !vis.some((n) => n.output)) warns.push(`${label}の図に「最後の出力」（"output": true の箱）がありません。入力から、利用者などが最後に受け取るもの（画面に出る結果・ファイル・レポート・通知など）まで描いてください`);
     for (const n of vis.filter((x) => x.output)) {
       if (!edges.some((e) => isObj(e) && e.to === n.id && e.kind === 'result' && shows(e, side))) warns.push(`${label}の「${n.name}」（最後の出力）に、結果を届ける線（"kind": "result"）がつながっていません`);
@@ -278,6 +280,7 @@ function format(v, indent = '') {
 const viewerMsg = installViewer();
 const { data: D, body } = readData();
 const migrated = migrate(D);
+const singled = singleSteps(D);
 validate(D, body);
 if (Array.isArray(D.groups) && Array.isArray(D.nodes)) {
   const tg = new Set(D.groups.filter((g) => isObj(g) && g.tool === true).map((g) => g.id));
@@ -321,6 +324,7 @@ console.log(`  計画 ${planN} 個 / 実装 ${builtN} 個 / 線 ${D.edges.length
 if (planN && builtN) console.log(`  比較: 完成 ${count.done} · 作業中 ${count.wip} · 未着手 ${count.todo} · 計画外 ${count.extra}${issueN ? ` · 要確認 ${issueN}` : ''}`);
 console.log(`  ビューア: ${viewerMsg}`);
 if (migrated) console.log('  形式: 旧形式（layers / layer）を groups / group に変換しました');
+if (singled) console.log('  形式: 同じ箱を複数の段に置いていた step を、最初の段だけにしました（もう一度使うところは戻る矢印で描かれます。段の番号と線を見直してください）');
 console.log(`  記録: 更新日 ${D.project.updated}${commit ? ` · commit ${commit}` : '（git なし）'}`);
 if (warns.length) {
   console.log(`\n⚠ 気になる点 ${warns.length} 件（表示はできます。直せるものは直してください）`);
