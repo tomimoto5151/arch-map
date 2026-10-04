@@ -1,7 +1,7 @@
 # arch-map
 
-作っているアプリのアーキテクチャ（全体の構成）を、**初心者にもわかるクリックできる図**にする Claude Code スキルです。
-プロジェクトで `/arch-map` と打つと、コードと計画書を読み取って `docs/arch-map/index.html` を作ります。2 回目からは、前回から変わった部分だけを更新します。
+作っているアプリのアーキテクチャ（全体の構成）を、**初心者にもわかるクリックできる図**にする Claude Code / Codex スキルです。
+プロジェクトでスキルを呼ぶと、コードと計画書を読み取って `docs/arch-map/index.html` を作ります。2 回目からは、前回から変わった部分だけを更新します。
 
 - **計画・実装・比較**の 3 つの表示を切り替えられます（未着手・作業中・計画外・要確認がひと目でわかる）
 - 箱をクリックすると、右のパネルに「ひとことで」「くわしく」「たとえるなら」「つながり」などの説明が出ます
@@ -24,7 +24,7 @@ open demo/index.html
 
 ## 必要なもの
 
-- [Claude Code](https://claude.com/claude-code)
+- [Claude Code](https://claude.com/claude-code) または [Codex](https://developers.openai.com/codex)
 - Node.js 18 以上（仕上げの検証スクリプトで使います）
 - 新しめのブラウザ（Chrome / Edge / Safari 16.4 以降 / Firefox 113 以降）
 
@@ -37,32 +37,40 @@ git clone https://github.com/tomimoto5151/arch-map.git
 cd arch-map
 ```
 
-`skills/arch-map/` の中身を、Claude Code の個人用スキルの置き場所にコピーします。
+`skills/arch-map/` の中身を、使うツールの個人用スキルの置き場所にコピーします。
+
+Claude Code:
 
 ```bash
 mkdir -p ~/.claude/skills/arch-map && cp -R skills/arch-map/. ~/.claude/skills/arch-map/
 ```
 
+Codex:
+
+```bash
+mkdir -p ~/.codex/skills/arch-map && cp -R skills/arch-map/. ~/.codex/skills/arch-map/
+```
+
 スキルを更新したとき（`git pull` したあとや、手直ししたあと）も、同じコマンドで上書きできます。
-Claude Code でスキル一覧に `arch-map` が出れば準備完了です（出ないときは Claude Code を再起動してください）。
+スキル一覧に `arch-map` が出れば準備完了です。出ないときは、使っているツールを再起動してください。
 
 ---
 
 ## 使い方
 
-図を作りたいプロジェクトで、Claude Code にこう入力します。
+図を作りたいプロジェクトで、Claude Code なら `/arch-map`、Codex なら `$arch-map` と入力します。
 
-| 入力 | すること |
-| --- | --- |
-| `/arch-map` | 計画と実装を自動で判断して、図を作る（すでにあれば更新する） |
-| `/arch-map plan` | 計画（これから作るもの）だけを描く・直す |
-| `/arch-map built` | 実装（もう作ったもの）だけをコードから読み取る |
+| Claude Code | Codex | すること |
+| --- | --- | --- |
+| `/arch-map` | `$arch-map` | 計画と実装を自動で判断して、図を作る（すでにあれば更新する） |
+| `/arch-map plan` | `$arch-map plan` | 計画（これから作るもの）だけを描く・直す |
+| `/arch-map built` | `$arch-map built` | 実装（もう作ったもの）だけをコードから読み取る |
 
 「アーキテクチャ図を作って」「構成図を更新して」のように普通の言葉で頼んでも動きます。
 
 ### 1 回目（新規作成）
 
-1. Claude がコードの構成（マニフェスト・ルーティング・DB スキーマ・`wrangler.toml` などの設定）と計画書（`PLAN.md`・`README.md`・会話で決めた計画など）を読みます
+1. エージェントがコードの構成（マニフェスト・ルーティング・DB スキーマ・`wrangler.toml` などの設定）と計画書（`PLAN.md`・`README.md`・会話で決めた計画など）を読みます
 2. 画面の操作・メニュー・ショートカット・裏で動く処理などから、コードにある機能を拾い、1 つの機能につき 1 つの「箱」を作ります。どこで動くか・何がまとめてデプロイされるかから「枠（グループ）」を決めます。依存パッケージや `.env.example` のキー名から、使っている外部サービスも洗い出します
 3. 箱ごとに、初心者向けの説明・たとえ・つながりを書きます
 4. `docs/arch-map/` に 2 つのファイルができ、ブラウザで図が開きます
@@ -80,7 +88,7 @@ open docs/arch-map/index.html
 
 ### 2 回目以降（更新）
 
-コードや計画が変わったら、もう一度 `/arch-map` を実行します。
+コードや計画が変わったら、もう一度スキルを呼び出します。
 
 - 前回記録した git の commit から何が変わったかだけを調べ、関係する箱と線だけを直します（全体を書き直さないので速くて軽い）
 - 変わった内容は、右パネルのガイドにある「更新ログ」に残ります
@@ -161,7 +169,7 @@ open docs/arch-map/index.html
 - Chrome・Edge では、そのままファイルに書き戻します。初回だけファイルの選択と書き込みの許可を求められ、同じタブではそのあと押すだけで保存できます
 - 違うプロジェクトのファイルや arch-map のデータでないファイルを選んだときは、書き込みません
 - Safari・Firefox では、書き換えた `arch-data.js` がダウンロードされます。図と同じフォルダの `arch-data.js` をそれで置き換えてください
-- 次に `/arch-map` で更新しても、書き換えた名前は引き継がれます
+- 次にスキルで更新しても、書き換えた名前は引き継がれます
 
 ### それ以外は arch-data.js を直接
 
@@ -169,8 +177,11 @@ open docs/arch-map/index.html
 直したら、プロジェクトのルートで検証スクリプトを実行してください。書式の誤り・存在しない箱への線・秘密情報らしき文字列などをチェックし、整形して保存します。
 
 ```bash
-node ~/.claude/skills/arch-map/scripts/archmap.mjs docs/arch-map
+node ~/.claude/skills/arch-map/scripts/archmap.mjs docs/arch-map  # Claude Code
+node ~/.codex/skills/arch-map/scripts/archmap.mjs docs/arch-map   # Codex
 ```
+
+使っているツールに合う行だけ実行してください。
 
 - `✕` が出たら直すべき点です（このときファイルは書き換えません）
 - `⚠` は表示はできるけれど、直したほうがよい点です（説明の抜け、長すぎる文など）
@@ -182,8 +193,8 @@ node ~/.claude/skills/arch-map/scripts/archmap.mjs docs/arch-map
 ## このリポジトリの構成
 
 ```
-skills/arch-map/               スキル本体（~/.claude/skills/arch-map にコピーして使う）
-├── SKILL.md                   Claude が読む手順書（新規作成・更新の流れと、書き方のルール）
+skills/arch-map/               スキル本体（各ツールの個人用スキルの置き場所にコピーして使う）
+├── SKILL.md                   エージェントが読む手順書（新規作成・更新の流れと、書き方のルール）
 ├── reference/schema.md        arch-data.js の項目と書き方（新規作成のときだけ読む）
 ├── assets/viewer.html         図のテンプレート（index.html としてプロジェクトに置かれる）
 ├── assets/example-data.js     状態をひと通り含むデータの見本
@@ -199,7 +210,7 @@ demo/                          見本のデータで描いたデモ
 <meta name="arch-map-viewer" content="15">
 ```
 
-各プロジェクトで次に `/arch-map` を実行したとき、番号が古い `index.html` は自動で新しいものに置き換わります。
+各プロジェクトで次にスキルを呼び出したとき、番号が古い `index.html` は自動で新しいものに置き換わります。
 
 ---
 
@@ -208,7 +219,7 @@ demo/                          見本のデータで描いたデモ
 - **秘密情報**: API キー・パスワード・`.env` の値は図に書かないルールです。検証スクリプトも、それらしい文字列を見つけると保存を止めます
 - **オフライン**: 図はオフラインでも表示できます。フォント（JetBrains Mono・M PLUS 1 Code）だけは Google Fonts から読み込み、つながらないときは端末のフォントで表示します
 - **テーマの記憶**: ダーク・ライトの選択はブラウザに記憶します。Safari の設定によっては file:// で開いたページで記憶できないことがあり、そのときは毎回 OS の設定に合わせて開きます
-- **精度**: 図は Claude がコードと計画書を読んで作る「目安」です。進み具合や要確認の根拠は、各箱の「実装メモ」に書かれます。テストを実際に動かして確かめたわけではないので、気になる点は右パネルの説明とファイルを見て確認してください
+- **精度**: 図はエージェントがコードと計画書を読んで作る「目安」です。進み具合や要確認の根拠は、各箱の「実装メモ」に書かれます。テストを実際に動かして確かめたわけではないので、気になる点は右パネルの説明とファイルを見て確認してください
 
 ## ライセンス
 
