@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arch-map-viewer" content="31">
+<meta name="arch-map-viewer" content="32">
 <title>アーキテクチャ図</title>
 <script>try { const t = localStorage.getItem('arch-map-theme'); if (t) document.documentElement.dataset.theme = t; } catch { /* 保存できない環境では OS の設定に従う */ }</script>
 <!-- arch-map スキルのテンプレートです。このファイルは編集しないでください（図の中身は arch-data.js）。
@@ -57,7 +57,6 @@
   --glow-node:100%;
   --node-tint:9%;
   --grain:none;
-  --gap-y:40px;
   color-scheme:dark;
 }
 /* ライトモード（生成り紙のようなベージュ）: 切替ボタンで選んだとき、または未選択で OS がライトのとき */
@@ -214,7 +213,7 @@ code,kbd{font:inherit}
 .canvas{position:absolute;top:0;left:0;width:max-content;padding:112px 32px 72px;transform-origin:0 0}
 .wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
 .labels{position:absolute;inset:0;pointer-events:none;z-index:2}
-.rows{position:relative;z-index:1;display:flex;flex-direction:column;gap:var(--gap-y)}
+.rows{position:relative;z-index:1;display:flex}
 .hud{position:absolute;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:6px 12px;font-size:12px;color:var(--text-2);background:var(--sf-hud);border:1px solid var(--bd-2);border-radius:6px}
 .hud-tl{top:12px;left:12px;max-width:calc(100% - 200px)}
 /* 帯の見出しの固定表示: 見出しが画面の外へ出たら、画面の端（横の流れは左端、縦の流れは上端）に貼り付けて出す */
@@ -229,39 +228,36 @@ code,kbd{font:inherit}
 .zoom .zv{min-width:56px}
 .insp-open{top:12px;right:12px;display:none;padding:0}
 .app.insp-off .insp-open{display:flex}
-.row{display:flex;justify-content:center;align-items:stretch;gap:24px}
 .grp{display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px;border:1px solid color-mix(in srgb,var(--c) 18%,transparent);border-left:2px solid var(--c);border-radius:0 6px 6px 0;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,transparent),color-mix(in srgb,var(--c) 3%,transparent) 45%,transparent)}
-.grp-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;max-width:calc(var(--cols) * 216px);color:var(--text-2);font-size:12px;line-height:1.5}
+.grp-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;color:var(--text-2);font-size:12px;line-height:1.5}
 .grp-h .idx{color:var(--c);font-size:11px;letter-spacing:.1em;opacity:.75}
 .grp-h b{color:var(--c);font-size:13px}
-/* 流れの図（縦）: 枠が縦の列になり、箱は起きる順（step）に上から下へ並ぶ */
-.rows.flow{display:grid;column-gap:56px;row-gap:0;align-items:start;justify-items:center;padding-top:52px}
-.rows.flow .grp.lane{display:block;align-self:stretch;justify-self:stretch;margin:-52px -20px -24px;padding:10px 16px;z-index:0}
-.rows.flow .lane .grp-h{display:-webkit-box;width:0;min-width:100%;max-width:none;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-.rows.flow .lane .grp-h > *{margin-right:8px}
-.rows.flow .cell{display:flex;gap:16px;z-index:1}
-/* 流れの図（横）: 枠が横の帯になり、箱は起きる順に左から右へ並ぶ。帯の見出しは左端 */
-.rows.flow.h{column-gap:0;row-gap:48px;align-items:center;justify-items:start;padding:16px 0 16px 176px}
-.rows.flow.h .grp.lane{margin:-16px -24px -16px -176px;padding:12px 16px}
-.rows.flow.h .lane .grp-h{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:136px;min-width:0}
-.rows.flow.h .lane .grp-h > span:last-child:not(.idx){display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:4}
-.rows.flow.h .cell{flex-direction:column}
-.rows.flow.h .cell .node{flex:none;width:200px}
-/* 実装用の道具: 流れの図の後ろ（縦の流れでは下、横の流れでは右端）に分けて置く区画 */
-.tools{display:flex;flex-direction:column;gap:12px;justify-self:stretch;margin-top:40px;padding-top:16px;border-top:1px dashed var(--bd-2);z-index:1}
-.rows.flow .tools{grid-column:1 / -1}
-.rows.flow.h .tools{grid-column:auto;align-self:stretch;width:min-content;margin:0 0 0 16px;padding:0 0 0 24px;border-top:0;border-left:1px dashed var(--bd-2)}
-.tools-h{margin:0;color:var(--text-2);font-size:12px}
+/* 詰めた図（横の流れ）: グループごとに縦の列を作り、箱を起きる順（step）に上から詰めて積む。箱が多い列は折り返す。
+   列どうし・折り返した列どうしの間隔（--before・--inner）は、そこに出す線のラベルが収まる幅にする */
+.rows.packed{align-items:stretch}
+.packed .lane{flex:none;margin-left:var(--before,0)}
+.packed .grp-nodes{display:grid;grid-auto-flow:column;grid-template-rows:repeat(var(--span),auto);grid-auto-columns:200px;gap:12px var(--inner,48px)}
+.packed .grp-h{width:0;min-width:100%}
+.rows.packed:not(.v) .grp{border-left-width:1px;border-top:2px solid var(--c);border-radius:0 0 6px 6px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 8%,transparent),color-mix(in srgb,var(--c) 3%,transparent) 45%,transparent)}
+.rows.packed:not(.v) .grp.tool{border-style:dashed;background:none}
+/* 詰めた図（縦の流れ）: グループが横の帯になり、箱は帯の中に起きる順に左から詰めて並ぶ。帯の見出しは左端 */
+.rows.packed.v{flex-direction:column;align-items:flex-start}
+.packed.v .lane{flex-direction:row;align-items:flex-start;gap:16px;margin:var(--before,0) 0 0}
+.packed.v .grp-nodes{grid-auto-flow:row;grid-template-rows:none;grid-template-columns:repeat(var(--span),200px);gap:16px 24px}
+.packed.v .lane .grp-h{flex-direction:column;align-items:flex-start;gap:2px;width:136px;min-width:0}
+/* 実装用の道具: 流れの図の後ろ（横の流れでは右端、縦の流れでは下）に分けて置く区画 */
+.tools{display:flex;flex-direction:column;gap:12px;z-index:1}
+.packed .tools{margin-left:var(--before,0);padding-left:24px;border-left:1px dashed var(--bd-2)}
+.packed.v .tools{margin:var(--before,0) 0 0;padding:16px 0 0;border-left:0;border-top:1px dashed var(--bd-2)}
+.tools-h{width:0;min-width:100%;margin:0;color:var(--text-2);font-size:12px}
 .tools-h b{color:var(--text)}
-.tools-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:24px}
-.rows.flow.h .tools-row{flex-direction:column;align-items:stretch}
-.rows.flow.h .tools .node{flex:none;width:200px}
+.tools-row{display:flex;align-items:stretch;flex:1}
+.packed.v .tools-row{flex-direction:column;align-items:flex-start}
 .grp.tool{border-style:dashed;background:none}
-.node .tool-b{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;line-height:1.7;color:var(--text-2);border:1px dashed var(--bd-2);border-radius:3px}
-.grp-nodes{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:var(--gap-y) 16px;max-width:calc(var(--cols) * 200px + (var(--cols) - 1) * 16px)}
+.node .tool-b{display:inline-flex;align-items:center;gap:4px;padding:0 6px;font-size:11px;line-height:1.7;color:var(--text-2);border:1px dashed var(--bd-2);border-radius:3px}
 
 /* ── node: 光る細い枠 + 角のカギ括弧 ── */
-.node{position:relative;flex:0 0 200px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 14px 12px;text-align:left;color:var(--text);
+.node{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px 10px;text-align:left;color:var(--text);
   background:linear-gradient(180deg,color-mix(in srgb,var(--c) var(--node-tint),transparent),transparent 55%),var(--bg-1);
   border:1px solid color-mix(in srgb,var(--c) 42%,transparent);border-radius:2px;box-shadow:0 0 16px -12px color-mix(in srgb,var(--c) var(--glow-node),transparent);cursor:pointer;
   transition:opacity .2s ease-out,border-color .15s ease-out,background-color .15s ease-out,box-shadow .2s ease-out}
@@ -272,11 +268,13 @@ code,kbd{font:inherit}
 .node.sel{border-color:var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 18%,transparent),color-mix(in srgb,var(--c) 5%,transparent)),var(--bg-1);box-shadow:0 0 0 1px var(--c),0 0 24px -10px color-mix(in srgb,var(--c) var(--glow-node),transparent)}
 .node.dim{opacity:.28}
 .node .nm{color:var(--c);font-size:14px;font-weight:700;line-height:1.4;letter-spacing:.03em;text-shadow:0 0 8px color-mix(in srgb,var(--c) var(--glow-text),transparent)}
+.node .no{color:var(--text-3);font-size:11px;line-height:1.5;letter-spacing:.08em}
 .node .tc{color:var(--text-3);font-size:12px}
-.node .out{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;font-weight:700;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid var(--c);border-radius:3px}
-.node .svc{display:inline-flex;align-items:center;gap:4px;margin:2px 0;padding:0 6px;font-size:11px;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:3px}
-.node .rl{margin-top:4px;line-height:1.5}
-.node .ft{display:flex;flex-direction:column;gap:8px;align-self:stretch;margin-top:auto;padding-top:12px}
+.node .tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}
+.node .out{display:inline-flex;align-items:center;gap:4px;padding:0 6px;font-size:11px;font-weight:700;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid var(--c);border-radius:3px}
+.node .svc{display:inline-flex;align-items:center;gap:4px;padding:0 6px;font-size:11px;line-height:1.7;color:var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:3px}
+.node .rl{margin-top:2px;line-height:1.5}
+.node .ft{display:flex;flex-direction:column;gap:6px;align-self:stretch;margin-top:auto;padding-top:8px}
 .node .st{color:var(--text-2);font-size:12px}
 .node.actor{border-radius:24px;background:var(--bg-1)}
 .node.actor::before,.node.actor::after{content:none}
@@ -292,7 +290,9 @@ code,kbd{font:inherit}
 /* ── wires ── */
 .wire{transition:opacity .2s ease-out}
 .wire path{fill:none;stroke:var(--wc,var(--wire));stroke-width:1.25}
-.wire polygon,.wire circle{fill:var(--wc,var(--wire))}
+.wire polygon{fill:var(--wc,var(--wire))}
+/* 接続口: 箱の辺に付く小さな四角 */
+.wire rect{fill:var(--bg-1);stroke:var(--wc,var(--wire));stroke-width:1.25}
 .wire.k-todo{--wc:var(--todo)}
 .wire.k-todo path{stroke-dasharray:4 4}
 .wire.k-extra{--wc:var(--extra)}
@@ -571,7 +571,8 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
   // 流れの向き。選んだことがなければ、横長の画面は左から右、縦長の画面は上から下
   let horiz = els.stage.clientWidth >= els.stage.clientHeight;
   try { const d = localStorage.getItem('arch-map-dir'); if (d === 'h' || d === 'v') horiz = d === 'h'; } catch { /* 読めなければ画面の形で決める */ }
-  const flowH = () => els.rows.classList.contains('h');
+  // 縦の流れ（グループが横の帯）で描いているか。横の流れではグループが縦の列になる
+  const bandMode = () => els.rows.classList.contains('v');
   let visEdges = [];
 
   /* ── state & routing ── */
@@ -650,13 +651,11 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     if (s === 'extra') return `＋ 計画外${p < 100 ? ` · ${p}%` : ''}`;
     return `${s === 'wip' ? spin : '✓ 完成'}${changed(n) ? ' · △変更' : ''}`;
   }
-  function nodeEl(n, v, step = 0) {
+  function nodeEl(n, v) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'node';
     b.dataset.id = n.id;
-    b.dataset.key = step ? `${n.id}@${step}` : n.id;
-    b.dataset.step = String(step);
     if (v === 'diff') b.classList.add(`s-${statusOf(n)}`);
     if (hasIssue(n, v)) b.classList.add('bad');
     if (n.actor) b.classList.add('actor');
@@ -666,7 +665,10 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     const tech = techOf(n, v);
     const bar = v !== 'plan' && n.built && !n.actor ? meter(Math.round(progressOf(n) * 100)) : '';
     const svc = n.service?.name;
-    b.innerHTML = `<span class="nm">${esc(n.name)}</span>${n.output ? '<span class="out">⇥ 最後の出力</span>' : ''}${isTool(n) ? '<span class="tool-b">⚒ 実装用の道具</span>' : ''}${svc ? `<span class="svc">◈ ${esc(svc)}</span>` : ''}${tech && tech !== svc ? `<span class="tc">${esc(tech)}</span>` : ''}`
+    const step = stepsOf(n)[0];
+    const tags = `${n.output ? '<span class="out">⇥ 最後の出力</span>' : ''}${isTool(n) ? '<span class="tool-b">⚒ 実装用の道具</span>' : ''}${svc ? `<span class="svc">◈ ${esc(svc)}</span>` : ''}`;
+    b.innerHTML = `${step ? `<span class="no" title="起きる順番">${String(step).padStart(2, '0')}</span>` : ''}<span class="nm">${esc(n.name)}</span>`
+      + `${tags ? `<span class="tags">${tags}</span>` : ''}${tech && tech !== svc ? `<span class="tc">${esc(tech)}</span>` : ''}`
       + `<span class="rl">${esc(n.role)}</span>${n.actor ? '' : `<span class="ft">${bar}<span class="st">${statusText(n, v)}</span></span>`}`;
     return b;
   }
@@ -695,358 +697,194 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     }
     const toolN = vis.filter(isTool).length;
     els.stat.textContent = `箱 ${vis.filter((n) => !n.actor && !isTool(n)).length}${toolN ? ` · 道具 ${toolN}` : ''} · 線 ${visEdges.length}`;
-    const flow = vis.filter((n) => !isTool(n)).every((n) => stepsOf(n).length);
-    els.dir.hidden = !flow;
-    if (flow) renderFlow(vis, v);
-    else renderTiers(vis, v);
+    els.dir.hidden = false;
+    renderPacked(vis, v);
     drawWires();
   }
-  // 流れの図: グループを流れに沿った帯（縦の流れでは列、横の流れでは行）にして並べ、箱を起きる順（step）の段に置く。
-  // step が複数の箱は各段に出る
-  function renderFlow(vis, v) {
-    const core = vis.filter((n) => !isTool(n));
-    const used = [...new Set(core.flatMap(stepsOf))].sort((a, b) => a - b);
-    const lanes = groups.filter((g) => !g.tool && core.some((n) => gid(n) === g.id));
-    const inCell = (g, st) => vis.filter((n) => gid(n) === g.id && stepsOf(n).includes(st));
-    // 同じ帯・同じ段の箱（並んで存在する機能）は、1 つのまとまりとして積む（横の流れでは縦に、縦の流れでは横に）
-    const tracks = used.map((st) => ({ st }));
-    // 段の間には、それぞれ幅を変えられる間隔のトラックを挟む（段 j は 2j+1 番目のトラック）
-    const posOf = (st) => 2 * used.indexOf(st) + 1;
-    const tools = toolSection(vis, v);
-    els.rows.classList.add('flow');
-    els.rows.classList.toggle('h', horiz);
-    const steps = tracks.map((_, j) => (j < tracks.length - 1 ? `auto var(--g${j}, 32px)` : 'auto')).join(' ');
-    const lanesT = horiz ? `repeat(${lanes.length}, auto)` : `repeat(${lanes.length}, max-content)`;
-    // 横の流れでは、右端の道具の区画の手前にも間隔のトラックを置く（道具へ向かう線のラベルを収める）
-    const toolPos = horiz && tools ? tracks.length * 2 + 1 : tracks.length * 2;
-    els.rows.style.gridTemplateColumns = horiz ? `${steps}${tools ? ` var(--g${tracks.length - 1}, 32px) auto` : ''}` : lanesT;
-    els.rows.style.gridTemplateRows = horiz ? lanesT : `${steps} auto`;
-    // along = 流れ（段）の向きのトラック、across = 帯を並べる向きのトラック
-    const along = horiz ? 'gridColumn' : 'gridRow', across = horiz ? 'gridRow' : 'gridColumn';
-    lanes.forEach((g, li) => {
-      const frame = document.createElement('section');
-      frame.className = 'grp lane';
-      frame.style.setProperty('--c', groupColor(g));
-      frame.style[across] = String(li + 1);
-      frame.style[along] = `1 / ${tracks.length * 2}`;
-      frame.innerHTML = `<div class="grp-h"><span class="idx">${String(li + 1).padStart(2, '0')}</span><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div>`;
-      els.rows.append(frame);
-      for (const st of used) {
-        const list = inCell(g, st);
-        if (!list.length) continue;
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.style[across] = String(li + 1);
-        cell.style[along] = String(posOf(st));
-        cell.append(...list.map((n) => nodeEl(n, v, st)));
-        els.rows.append(cell);
-      }
-    });
-    if (tools) {
-      tools.style[along] = String(toolPos);
-      if (horiz) tools.style.gridRow = `1 / ${lanes.length + 1}`;
-      els.rows.append(tools);
+  // 線のラベルの幅（列の間隔を決めるのに使う）
+  const labelW = new Map();
+  function labelWidth(text) {
+    if (!labelW.has(text)) {
+      const t = document.createElement('span');
+      t.className = 'wl';
+      t.textContent = text;
+      els.labels.append(t);
+      labelW.set(text, t.offsetWidth);
+      t.remove();
     }
+    return labelW.get(text);
   }
-  // 実装用の道具（本番のサービスの中では動かないもの）を、流れの図の後ろ（縦の流れでは下、横の流れでは右端）にまとめて置く
-  function toolSection(vis, v) {
-    const tgs = groups.filter((g) => g.tool && vis.some((n) => gid(n) === g.id));
-    if (!tgs.length) return null;
+  // 詰めた図: グループごとに列（横の流れ）か帯（縦の流れ）を作り、箱を起きる順（step）に詰めて並べる。
+  // 箱が多いグループは折り返して、図全体が縦にも横にも伸びすぎないようにする。実装用の道具のグループは後ろの区画に置く
+  function renderPacked(vis, v) {
+    const order = (n) => stepsOf(n)[0] ?? Infinity;
+    const byStep = (a, b) => (order(a) === order(b) ? 0 : order(a) - order(b));
+    const laneOf = (g) => ({ g, list: vis.filter((n) => gid(n) === g.id).sort(byStep) });
+    const lanes = groups.filter((g) => !g.tool && vis.some((n) => gid(n) === g.id)).map(laneOf);
+    const toolLanes = groups.filter((g) => g.tool && vis.some((n) => gid(n) === g.id)).map(laneOf);
+    const all = [...lanes, ...toolLanes];
+    const core = vis.filter((n) => !isTool(n)).length;
+    // 1 列（縦の流れでは 1 行）に並べる箱の数の上限。折り返すときは、各列の箱の数がそろうように分ける
+    const cap = horiz ? Math.max(5, Math.ceil(Math.sqrt(core * 1.6))) : Math.max(3, Math.ceil(Math.sqrt(Math.max(...all.map((L) => L.list.length)))));
+    // 横の流れでは、列（折り返した列も 1 つと数える）を左から順に番号を振り、線のラベルを置く隙間を決める
+    const slotOf = new Map();
+    let slots = 0;
+    for (const L of all) {
+      L.lines = Math.ceil(L.list.length / cap);
+      L.span = Math.ceil(L.list.length / L.lines);
+      L.first = slots;
+      L.list.forEach((n, i) => slotOf.set(n.id, slots + Math.floor(i / L.span)));
+      slots += L.lines;
+    }
+    // ラベルは、線がまたぐ隙間のうち真ん中のもの（同じ列の中で折り返す線は、その列のすぐ右の隙間）に置く。
+    // drawWires も同じ選び方をするので、変えるときは両方そろえる
+    const need = new Map();
+    if (horiz) {
+      for (const e of visEdges) {
+        if (!e.label) continue;
+        const a = slotOf.get(e.from), b = slotOf.get(e.to);
+        const g = a === b ? a : Math.floor((Math.min(a, b) + Math.max(a, b) - 1) / 2);
+        need.set(g, Math.max(need.get(g) || 0, labelWidth(e.label) + 24));
+      }
+    }
+    const gapAfter = (s) => need.get(s) || 0;
+    els.rows.classList.add('packed');
+    els.rows.classList.toggle('v', !horiz);
+    const laneEl = (L, idx) => {
+      const sec = document.createElement('section');
+      sec.className = `grp lane${L.g.tool ? ' tool' : ''}`;
+      sec.style.setProperty('--c', groupColor(L.g));
+      sec.style.setProperty('--span', String(L.span));
+      if (horiz) {
+        const inner = Array.from({ length: L.lines - 1 }, (_, k) => gapAfter(L.first + k));
+        sec.style.setProperty('--inner', `${Math.max(48, ...inner)}px`);
+      }
+      sec.innerHTML = `<div class="grp-h">${idx ? `<span class="idx">${idx}</span>` : ''}<b>${esc(L.g.name)}</b>${L.g.desc ? `<span>${esc(L.g.desc)}</span>` : ''}</div><div class="grp-nodes"></div>`;
+      sec.lastElementChild.append(...L.list.map((n) => nodeEl(n, v)));
+      return sec;
+    };
+    // 列（帯）の手前の間隔。横の流れでは、手前の隙間に置くラベルが収まる幅にする（両側の列の枠の内側の余白 16px ずつも使える）
+    const before = (L) => `${horiz ? Math.max(72, gapAfter(L.first - 1) - 32) : 56}px`;
+    lanes.forEach((L, i) => {
+      const el = laneEl(L, String(i + 1).padStart(2, '0'));
+      if (i) el.style.setProperty('--before', before(L));
+      els.rows.append(el);
+    });
+    if (!toolLanes.length) return;
     const wrap = document.createElement('div');
     wrap.className = 'tools';
+    wrap.style.setProperty('--before', before(toolLanes[0]));
     wrap.innerHTML = '<p class="tools-h"><b>⚒ 実装用の道具</b> ・ 作る・確かめる・調整するときに使うもの（本番のサービスの中では動かない）</p><div class="tools-row"></div>';
-    for (const g of tgs) {
-      const box = document.createElement('section');
-      box.className = 'grp tool';
-      box.style.setProperty('--c', groupColor(g));
-      box.style.setProperty('--cols', '4');
-      box.innerHTML = `<div class="grp-h"><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div><div class="grp-nodes"></div>`;
-      box.lastElementChild.append(...vis.filter((n) => gid(n) === g.id).map((n) => nodeEl(n, v)));
-      wrap.lastElementChild.append(box);
-    }
-    return wrap;
-  }
-  // 段の図（step のない旧形式）: row が同じグループは横に並べる（row がなければ 1 グループ 1 行・書いた順）
-  function renderTiers(vis, v) {
-    const rowKey = (g, i) => (Number.isInteger(g.row) ? g.row : i + 1);
-    const keys = [...new Set(groups.map(rowKey))].sort((a, b) => a - b);
-    let i = 0;
-    for (const key of keys) {
-      const row = document.createElement('div');
-      row.className = 'row';
-      for (const g of groups.filter((x, k) => !x.tool && rowKey(x, k) === key)) {
-        const list = vis.filter((n) => gid(n) === g.id);
-        if (!list.length) continue;
-        i += 1;
-        const box = document.createElement('section');
-        box.className = 'grp';
-        box.style.setProperty('--c', groupColor(g));
-        box.style.setProperty('--cols', String(Number.isInteger(g.cols) ? Math.min(8, Math.max(1, g.cols)) : 4));
-        box.innerHTML = `<div class="grp-h"><span class="idx">${String(i).padStart(2, '0')}</span><b>${esc(g.name)}</b>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}</div><div class="grp-nodes"></div>`;
-        box.lastElementChild.append(...list.map((n) => nodeEl(n, v)));
-        row.append(box);
-      }
-      if (row.children.length) els.rows.append(row);
-    }
-    const tools = toolSection(vis, v);
-    if (tools) els.rows.append(tools);
+    toolLanes.forEach((L, i) => {
+      const el = laneEl(L, '');
+      el.style.setProperty('--before', i ? before(L) : '0px');
+      wrap.lastElementChild.append(el);
+    });
+    els.rows.append(wrap);
   }
 
-  /* ── wires: 段の隙間を通る直角の線を自動で引く ── */
+  /* ── wires: 箱の横の辺（縦の流れでは上下の辺）から出る曲線を引く ── */
   const NS = 'http://www.w3.org/2000/svg';
   const svg = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
 
-  function drawWires(pass = 0) {
+  function drawWires() {
     els.wires.replaceChildren();
     els.labels.replaceChildren();
     const nodeEls = [...els.rows.querySelectorAll('.node')];
     if (!visEdges.length || !nodeEls.length) { applyHighlight(); return; }
     const S = els.canvas.getBoundingClientRect();
     const z = cam.z;
-    // 横の流れでは縦と横を入れ替えて、縦の流れと同じ手順で線を引く（描くときに戻す）
-    const H = flowH();
+    // 流れの向きを u、それと直角の向きを v として計算する（横の流れでは u = x、縦の流れでは u = y。描くときに戻す）
+    const V = bandMode();
     const loc = (r) => {
       const x0 = (r.left - S.left) / z, x1 = (r.right - S.left) / z, y0 = (r.top - S.top) / z, y1 = (r.bottom - S.top) / z;
-      return H ? { l: y0, r: y1, t: x0, b: x1 } : { l: x0, r: x1, t: y0, b: y1 };
+      return V ? { l: y0, r: y1, t: x0, b: x1 } : { l: x0, r: x1, t: y0, b: y1 };
     };
-    const real = (p) => (H ? { x: p.y, y: p.x } : p);
-    const boxes = new Map();
-    const copies = new Map();
-    for (const el of nodeEls) {
-      if (!copies.has(el.dataset.id)) copies.set(el.dataset.id, []);
-      copies.get(el.dataset.id).push({ key: el.dataset.key, step: Number(el.dataset.step) });
-      const bx = loc(el.getBoundingClientRect());
-      bx.cx = (bx.l + bx.r) / 2;
-      boxes.set(el.dataset.key, bx);
+    const real = (p) => (V ? { x: p.v, y: p.u } : { x: p.u, y: p.v });
+    const boxes = new Map(nodeEls.map((el) => [el.dataset.id, loc(el.getBoundingClientRect())]));
+    // 流れの向きで箱のない隙間（列と列の間）。線のラベルはここに置く（ラベルの高さに足りない、帯の中の行の間は除く）
+    const spans = [...boxes.values()].map((b) => [b.l, b.r]).sort((a, b) => a[0] - b[0]);
+    const gaps = [];
+    let end = spans[0][1];
+    for (const [l, r] of spans.slice(1)) {
+      if (l > end + 24) gaps.push({ a: end, b: l, c: (end + l) / 2 });
+      end = Math.max(end, r);
     }
-    const cols = [...els.rows.querySelectorAll('.grp-nodes, .cell')].map((el) => loc(el.getBoundingClientRect()));
-    const colL = Math.min(...cols.map((r) => r.l));
-    const colR = Math.max(...cols.map((r) => r.r));
-    // 横の流れでは、帯と帯の境目（箱のない横長の空き）の中心。線がそこを横切るなら、ラベルを横書きでそこに置ける
-    const bands = H ? [...els.rows.querySelectorAll('.grp.lane')].map((el) => loc(el.getBoundingClientRect())).sort((a, b) => a.l - b.l) : [];
-    const seams = bands.slice(1).map((b, i) => (bands[i].r + b.l) / 2);
-    const labelW = new Map();
-    const widthOf = (text) => {
-      if (!labelW.has(text)) {
-        const t = document.createElement('span');
-        t.className = 'wl';
-        t.textContent = text;
-        els.labels.append(t);
-        labelW.set(text, t.offsetWidth);
-        t.remove();
-      }
-      return labelW.get(text);
-    };
 
-    // 見た目の「行」（折り返しも 1 行として扱う）。横並びのグループで見出しの高さが違っても同じ行とみなす
-    const lines = [];
-    for (const bx of [...boxes.values()].sort((a, b) => a.t - b.t)) {
-      let line = lines[lines.length - 1];
-      if (!line || bx.t > line.t + 24) { line = { t: bx.t, b: bx.b, items: [] }; lines.push(line); }
-      line.b = Math.max(line.b, bx.b);
-      line.items.push(bx);
-      bx.line = lines.length - 1;
-    }
-    lines.forEach((line) => line.items.sort((a, b) => a.l - b.l));
-    const LANE = 16;
-    const gapRange = (g, m) => [lines[g].b, g + 1 < lines.length ? lines[g + 1].t : lines[g].b + Math.max(32, LANE * (m + 1))];
-
-    // 両端の組み合わせは「下へ進む・段の差が小さい」ものを選ぶ（なければ上へ戻る差が小さいもの）
-    const pick = (e) => {
-      let best = null, cost = Infinity;
-      for (const a of copies.get(e.from)) {
-        for (const b of copies.get(e.to)) {
-          const d = b.step - a.step, c = d > 0 ? d : 1000 - d;
-          if (c < cost) { cost = c; best = [a.key, b.key]; }
-        }
-      }
-      return best;
-    };
+    // 先の箱が流れの先にあれば前へ進む線、手前にあれば戻る線、同じ列（帯）なら外へふくらんで折り返す線
     const wires = visEdges.map((e) => {
-      const [ka, kb] = pick(e);
-      const A = boxes.get(ka), B = boxes.get(kb);
-      return { e, ka, kb, A, B, kind: B.line > A.line ? 'down' : B.line < A.line ? 'up' : 'u' };
+      const A = boxes.get(e.from), B = boxes.get(e.to);
+      return { e, A, B, kind: B.l >= A.r - 1 ? 'fwd' : B.r <= A.l + 1 ? 'back' : 'loop' };
     });
-
-    // 箱の上下の辺に接続口を割り振る（相手の位置順に並べて交差を減らす）
+    // 接続口を箱の辺に割り振る（相手の位置順に並べて交差を減らす）
     const ports = new Map();
-    const addPort = (id, side, w, end, otherX) => {
+    const addPort = (id, side, w, end, other) => {
       const k = `${id}|${side}`;
       if (!ports.has(k)) ports.set(k, []);
-      ports.get(k).push({ w, end, otherX });
+      ports.get(k).push({ w, end, other });
     };
+    const mid = (b) => (b.t + b.b) / 2;
     for (const w of wires) {
       const { A, B, kind } = w;
-      if (kind === 'down') { addPort(w.ka, 'b', w, 'sp', B.cx); addPort(w.kb, 't', w, 'tp', A.cx); }
-      if (kind === 'up') { addPort(w.ka, 't', w, 'sp', B.cx); addPort(w.kb, 'b', w, 'tp', A.cx); }
-      if (kind === 'u') { addPort(w.ka, 'b', w, 'sp', B.cx); addPort(w.kb, 'b', w, 'tp', A.cx); }
+      addPort(w.e.from, kind === 'back' ? 'l' : 'r', w, 'sp', mid(B));
+      addPort(w.e.to, kind === 'fwd' ? 'l' : 'r', w, 'tp', mid(A));
     }
     for (const [k, list] of ports) {
       const [id, side] = k.split('|');
       const bx = boxes.get(id);
-      const width = bx.r - bx.l;
-      list.sort((a, b) => a.otherX - b.otherX);
-      list.forEach((p, i) => {
-        const x = list.length === 1 ? bx.cx : bx.l + width * 0.2 + (width * 0.6 * (i + 0.5)) / list.length;
-        p.w[p.end] = { x, y: side === 't' ? bx.t : bx.b };
-      });
+      const t = bx.t + 12, h = Math.max(0, bx.b - bx.t - 24);
+      list.sort((a, b) => a.other - b.other);
+      list.forEach((p, i) => { p.w[p.end] = { u: side === 'r' ? bx.r : bx.l, v: t + (h * (i + 1)) / (list.length + 1) }; });
     }
 
-    // 段を飛ばす線は、途中の段の箱の隙間（チャンネル）を縦に通す。同じチャンネルを何本も通るときは 6px ずつずらし、
-    // ずらした先が箱にかかるなら、次に近いチャンネルを使う
-    const chanUse = new Map();
-    const findChannel = (mids, x1, x2) => {
-      const cands = [x1, x2, (x1 + x2) / 2];
-      for (const li of mids) {
-        const it = lines[li].items;
-        cands.push(it[0].l - 16, it[it.length - 1].r + 16);
-        for (let i = 0; i < it.length - 1; i++) cands.push((it[i].r + it[i + 1].l) / 2);
-      }
-      const free = (x) => x >= colL + 4 && x <= colR - 4 && mids.every((li) => lines[li].items.every((b) => x < b.l - 6 || x > b.r + 6));
-      const cost = (x) => Math.abs(x - x1) + Math.abs(x - x2);
-      const bases = [...new Set(cands.map((x) => Math.round(x)))].filter(free).sort((a, b) => cost(a) - cost(b));
-      for (const base of bases) {
-        const used = chanUse.get(base) || 0;
-        for (let k = used; k < used + 6; k++) {
-          const x = base + Math.ceil(k / 2) * 6 * (k % 2 ? 1 : -1);
-          if (free(x)) { chanUse.set(base, k + 1); return x; }
-        }
-      }
-      // どこにも通れなければ、図の外側を回る
-      const out = Math.round(colR + 8), used = chanUse.get(out) || 0;
-      chanUse.set(out, used + 1);
-      return out + used * 6;
-    };
-    const range = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
-
-    const gaps = new Map();
-    const addSeg = (g, x1, x2, key) => {
-      const s = { x1, x2, y: 0, g, key };
-      if (!gaps.has(g)) gaps.set(g, []);
-      gaps.get(g).push(s);
-      return s;
+    const AL = 7;
+    const at3 = (p0, p1, p2, p3, t) => {
+      const s = 1 - t;
+      return { u: s * s * s * p0.u + 3 * s * s * t * p1.u + 3 * s * t * t * p2.u + t * t * t * p3.u, v: s * s * s * p0.v + 3 * s * s * t * p1.v + 3 * s * t * t * p2.v + t * t * t * p3.v };
     };
     for (const w of wires) {
-      const { A, B, kind } = w;
-      if (kind === 'u') { w.s1 = addSeg(A.line, w.sp.x, w.tp.x, `a:${w.ka}`); continue; }
-      const down = kind === 'down';
-      if (Math.abs(w.sp.x - w.tp.x) < 8 && w.sp.x > B.l + 8 && w.sp.x < B.r - 8) w.tp.x = w.sp.x;
-      const g1 = down ? A.line : A.line - 1;
-      const g2 = down ? B.line - 1 : B.line;
-      if (g1 === g2) { w.s1 = addSeg(g1, w.sp.x, w.tp.x, `a:${w.ka}`); continue; }
-      w.cx = findChannel(down ? range(A.line + 1, B.line - 1) : range(B.line + 1, A.line - 1), w.sp.x, w.tp.x);
-      w.s1 = addSeg(g1, w.sp.x, w.cx, `a:${w.ka}`);
-      w.s2 = addSeg(g2, w.cx, w.tp.x, `b:${w.kb}`);
-    }
-
-    // 同じ隙間を通る横線は高さ（レーン）をずらす。ラベルが箱にかからないよう、
-    // 隙間ごとに「レーン数 + 1」× LANE の高さを取る。流れの図は隙間ごと、段の図は全体の間隔（--gap-y）で調整する。
-    // 横の流れで、ラベルを帯の境目に置けない線（同じ帯の中を進む線）があれば、その隙間はラベルの幅まで広げる
-    let deficit = -Infinity;
-    const dir = (s) => Math.sign(Math.round(s.x2 - s.x1));
-    const laneN = new Map();
-    const lo = (s) => Math.min(s.x1, s.x2) - 12, hi = (s) => Math.max(s.x1, s.x2) + 12;
-    for (const [g, segs] of gaps) {
-      segs.sort((a, b) => dir(b) - dir(a) || (dir(a) > 0 ? b.x1 - a.x1 : a.x1 - b.x1));
-      // 範囲が重ならない線どうしと、同じ箱から出る（同じ箱へ入る）線どうしは、同じレーンを使って隙間を詰める
-      const lanes = [];
-      for (const sg of segs) {
-        let L = lanes.find((l) => l.every((t) => t.key === sg.key || hi(t) < lo(sg) || hi(sg) < lo(t)));
-        if (!L) { L = []; lanes.push(L); }
-        L.push(sg);
-        sg.lane = lanes.indexOf(L);
+      const { sp, tp, kind, A, B } = w;
+      const out = kind === 'back' ? -1 : 1, dir = kind === 'fwd' ? 1 : -1;
+      const te = { u: tp.u - dir * AL, v: tp.v };
+      let c1, c2;
+      if (kind === 'loop') {
+        const k = 28 + Math.min(72, Math.abs(tp.v - sp.v) * 0.25);
+        c1 = { u: sp.u + k, v: sp.v };
+        c2 = { u: te.u + k, v: te.v };
+      } else {
+        const dx = Math.max(32, Math.abs(te.u - sp.u) * 0.45);
+        c1 = { u: sp.u + out * dx, v: sp.v };
+        c2 = { u: te.u - dir * dx, v: te.v };
       }
-      laneN.set(g, lanes.length);
-      const [y0, y1] = gapRange(g, lanes.length);
-      segs.forEach((sg) => { sg.y = y0 + ((y1 - y0) * (sg.lane + 1)) / (lanes.length + 1); });
-      if (g + 1 < lines.length && y1 > y0) deficit = Math.max(deficit, LANE * (lanes.length + 1) - (y1 - y0));
-    }
-    // 横の流れのラベルは、線の縦の部分が横切る帯の境目のうち、真ん中に近いものに置く。
-    // 境目の横に箱があってラベルがかかる場合（右端の道具の区画など）は、その境目を使わない
-    // 道具の線は除く。道具の区画は帯をまたいで並ぶので、境目に置けるかどうかが、その手前の間隔の幅しだいで変わり、
-    // 間隔の幅とラベルの置き場所が互いに決め合って落ち着かなくなるため、いつも隙間の中に置く
-    const seamOf = (w) => {
-      if (isTool(nodeById.get(w.e.from)) || isTool(nodeById.get(w.e.to))) return null;
-      const half = widthOf(w.e.label) / 2 + 4;
-      for (const s of [w.s1, w.s2]) {
-        if (!s) continue;
-        const lo = Math.min(s.x1, s.x2) + 4, hi = Math.max(s.x1, s.x2) - 4, mid = (s.x1 + s.x2) / 2;
-        const free = (c) => ![...boxes.values()].some((b) => b.l < c + 12 && b.r > c - 12 && b.t < s.y + half && b.b > s.y - half);
-        const hit = seams.filter((c) => c > lo && c < hi && free(c)).sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid))[0];
-        if (hit !== undefined) return { x: hit, y: s.y };
-      }
-      return null;
-    };
-    if (els.rows.classList.contains('flow')) {
-      const labelNeed = new Map();
-      if (H) for (const w of wires) if (w.e.label && !seamOf(w)) labelNeed.set(w.s1.g, Math.max(labelNeed.get(w.s1.g) || 0, widthOf(w.e.label) + 16));
-      let changed = false;
-      for (let g = 0; g + 1 < lines.length; g++) {
-        const want = `${Math.max(32, LANE * ((laneN.get(g) || 0) + 1), labelNeed.get(g) || 0)}px`;
-        if (els.rows.style.getPropertyValue(`--g${g}`) !== want) { els.rows.style.setProperty(`--g${g}`, want); changed = true; }
-      }
-      if (pass === 0 && changed) { drawWires(1); return; }
-    }
-    const curGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap-y'));
-    const needGap = deficit === -Infinity ? 40 : Math.min(200, Math.max(40, Math.ceil(curGap + deficit)));
-    if (pass === 0 && !els.rows.classList.contains('flow') && needGap !== curGap) {
-      document.documentElement.style.setProperty('--gap-y', `${needGap}px`);
-      drawWires(1);
-      return;
-    }
-
-    for (const w of wires) {
-      const { sp, tp, s1, s2 } = w;
-      const pts = simplify(s2
-        ? [sp, { x: sp.x, y: s1.y }, { x: w.cx, y: s1.y }, { x: w.cx, y: s2.y }, { x: tp.x, y: s2.y }, tp]
-        : [sp, { x: sp.x, y: s1.y }, { x: tp.x, y: s1.y }, tp]);
-      // ラベルは段の隙間にある最初のレーン上に置き、箱と重ならないようにする。横の流れでは帯の境目に置き、
-      // 置けなければ（広げておいた）隙間の中に収める。どちらの向きに逃がすかも覚えておく（applyHighlight）
+      // ラベルは、線がまたぐ隙間のうち真ん中のもの（折り返す線は、その列のすぐ外の隙間）の中心に置く。renderPacked と同じ選び方
       let at = null;
       if (w.e.label) {
-        const seam = H && seamOf(w);
-        if (seam) at = { ...real(seam), nudge: 'x' };
-        else {
-          const i = pts.findIndex((p, k) => k < pts.length - 1 && Math.abs(p.y - s1.y) < 0.5 && Math.abs(pts[k + 1].y - s1.y) < 0.5);
-          const p = { x: i < 0 ? pts[0].x : (pts[i].x + pts[i + 1].x) / 2, y: s1.y };
-          if (H) {
-            const [y0, y1] = gapRange(s1.g, laneN.get(s1.g)), half = widthOf(w.e.label) / 2 + 4;
-            p.y = Math.max(y0 + half, Math.min(y1 - half, p.y));
-          }
-          at = { ...real(p), nudge: H ? 'y' : 'x' };
+        let p;
+        if (kind === 'loop') {
+          const edge = Math.max(A.r, B.r), g = gaps.find((x) => x.a >= edge - 1);
+          p = { u: g ? g.c : edge + 36, v: (sp.v + tp.v) / 2 };
+        } else {
+          const lo = Math.min(sp.u, tp.u), hi = Math.max(sp.u, tp.u);
+          const cand = gaps.filter((x) => x.a >= lo - 1 && x.b <= hi + 1);
+          const g = cand[Math.floor((cand.length - 1) / 2)];
+          if (g) {
+            // 曲線の u は端から端へ一方向に進むので、二分探索でラベルの位置の t を求める
+            let t0 = 0, t1 = 1;
+            for (let i = 0; i < 24; i++) {
+              const tm = (t0 + t1) / 2;
+              if ((at3(sp, c1, c2, te, tm).u - g.c) * dir < 0) t0 = tm; else t1 = tm;
+            }
+            p = { u: g.c, v: at3(sp, c1, c2, te, (t0 + t1) / 2).v };
+          } else p = at3(sp, c1, c2, te, 0.5);
         }
+        at = { ...real(p), nudge: V ? 'x' : 'y' };
       }
-      renderWire(w.e, pts.map(real), at);
+      const P = [sp, c1, c2, te].map(real);
+      renderWire(w.e, `M${P[0].x},${P[0].y} C${P[1].x},${P[1].y} ${P[2].x},${P[2].y} ${P[3].x},${P[3].y}`, P[0], real(tp), V ? { x: 0, y: dir } : { x: dir, y: 0 }, at);
     }
     applyHighlight();
   }
 
-  function simplify(pts) {
-    const out = [];
-    for (const p of pts) {
-      const last = out[out.length - 1];
-      if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) continue;
-      out.push(p);
-    }
-    for (let i = out.length - 2; i > 0; i--) {
-      const a = out[i - 1], b = out[i], c = out[i + 1];
-      if ((Math.abs(a.x - b.x) < 0.5 && Math.abs(b.x - c.x) < 0.5) || (Math.abs(a.y - b.y) < 0.5 && Math.abs(b.y - c.y) < 0.5)) out.splice(i, 1);
-    }
-    return out;
-  }
-  function roundedPath(pts, r = 6) {
-    let d = `M${pts[0].x},${pts[0].y}`;
-    for (let i = 1; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
-      const d1 = Math.hypot(p1.x - p0.x, p1.y - p0.y), d2 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-      const rr = Math.min(r, d1 / 2, d2 / 2);
-      const a = { x: p1.x + ((p0.x - p1.x) * rr) / d1, y: p1.y + ((p0.y - p1.y) * rr) / d1 };
-      const b = { x: p1.x + ((p2.x - p1.x) * rr) / d2, y: p1.y + ((p2.y - p1.y) * rr) / d2 };
-      d += ` L${a.x},${a.y} Q${p1.x},${p1.y} ${b.x},${b.y}`;
-    }
-    const z = pts[pts.length - 1];
-    return `${d} L${z.x},${z.y}`;
-  }
   function edgeKind(e) {
     if (state.view !== 'diff') return 'both';
     const a = statusOf(nodeById.get(e.from)), b = statusOf(nodeById.get(e.to));
@@ -1054,20 +892,15 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     if (e.only === 'built' || a === 'extra' || b === 'extra') return 'extra';
     return 'both';
   }
-  function renderWire(e, pts, at) {
-    const end = pts[pts.length - 1], prev = pts[pts.length - 2];
-    const len = Math.hypot(end.x - prev.x, end.y - prev.y) || 1;
-    const ux = (end.x - prev.x) / len, uy = (end.y - prev.y) / len;
-    const al = Math.min(7, len - 1);
-    const body = pts.slice();
-    body[body.length - 1] = { x: end.x - ux * al, y: end.y - uy * al };
+  // d = 線の本体（矢印の手前まで）、sp = 出る点、tp = 矢印の先、u = 矢印の向き
+  function renderWire(e, d, sp, tp, u, at) {
     const toolEdge = isTool(nodeById.get(e.from)) || isTool(nodeById.get(e.to));
     const g = svg('g', { class: `wire k-${edgeKind(e)}${e.kind === 'result' ? ' res' : ''}${toolEdge ? ' tool' : ''}`, 'data-from': e.from, 'data-to': e.to });
-    const bx = end.x - ux * 7, by = end.y - uy * 7;
+    const bx = tp.x - u.x * 7, by = tp.y - u.y * 7;
     g.append(
-      svg('path', { d: roundedPath(body) }),
-      svg('polygon', { points: `${end.x},${end.y} ${bx - uy * 4},${by + ux * 4} ${bx + uy * 4},${by - ux * 4}` }),
-      svg('circle', { cx: pts[0].x, cy: pts[0].y, r: 2.5 }),
+      svg('path', { d }),
+      svg('polygon', { points: `${tp.x},${tp.y} ${bx - u.y * 4},${by + u.x * 4} ${bx + u.y * 4},${by - u.x * 4}` }),
+      svg('rect', { x: sp.x - 3, y: sp.y - 3, width: 6, height: 6 }),
     );
     els.wires.append(g);
     if (!at) return;
@@ -1101,7 +934,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     }
     // 表示するラベル同士が重なったら、後のものを空きに沿ってずらす（段の隙間・帯の境目に沿って左右へ。横の流れの隙間の中では上下へ）。
     // ずらした先が箱にかかるなら、反対側やもう一つ先を試す
-    const m = flowH() ? 2 : 0;
+    const m = bandMode() ? 0 : 2;
     const boxes = [...els.rows.querySelectorAll('.node')].map((b) => b.getBoundingClientRect());
     const placed = [];
     for (const t of els.labels.children) {
@@ -1182,16 +1015,15 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     const svcs = nodes.filter((n) => n.service?.name);
     if (svcs.length) h += sec('使っている外部サービス', `<ul class="ls">${svcs.map((n) => `<li><button type="button" class="go" data-go="${esc(n.id)}">◈ ${esc(n.service.name)}</button>${n.service.provider ? `（${esc(n.service.provider)}）` : ''}<span class="muted"> — ${esc(n.name)}${n.built ? '' : '（計画）'}</span></li>`).join('')}</ul>`);
     if (issues.length) h += sec('要確認', `<ul class="ls">${issues.map((n) => `<li><button type="button" class="go bad-t" data-go="${esc(n.id)}">✕ ${esc(n.name)}</button>：${esc(n.built.issue)}</li>`).join('')}</ul>`);
-    const H = flowH();
+    const H = !bandMode();
     h += sec('図の読み方', '<ul class="ls">'
       + '<li>箱 ＝ 機能。1 つの機能は 1 つの箱だけです。クリックすると、ここに説明が出ます</li>'
-      + '<li>線 ＝ 「頼む側」から「頼まれる側」へ。矢印の先が頼まれる側です</li>'
+      + `<li>箱の左上の番号 ＝ その機能が初めて動く順番。1 が最初の入力です。${H ? '列の中は上から下' : '帯の中は左から右'}へ、この順に並びます</li>`
+      + `<li>${H ? '縦の列' : '横の帯'} ＝ 実際のまとまり（動く場所や部品）。呼び出しが進む向きに、${H ? '左から右' : '上から下'}へ並びます</li>`
+      + '<li>線 ＝ 「頼む側」から「頼まれる側」へ。矢印の先が頼まれる側です。□ が線の出る口です</li>'
+      + `<li>${H ? '右から左' : '下から上'}への矢印 ＝ 前のまとまりにもう一度戻るところ（結果を返す、続きを頼むなど）。同じ${H ? '列' : '帯'}の中どうしの線は、${H ? '右' : '下'}へふくらんで折り返します</li>`
       + '<li>点線 ＝ 結果が返っていく流れ。⇥ の箱が、利用者などが最後に受け取るものです</li>'
       + `<li>${H ? '右端' : '下'}の「⚒ 実装用の道具」＝ 作る・確かめるための道具。本番のサービスの中では動きません（一点鎖線でつながります）</li>`
-      + (H ? '<li>左から右へ ＝ 機能が初めて動く順番。いちばん左が最初の入力です</li>'
-        : '<li>上から下へ ＝ 機能が初めて動く順番。いちばん上が最初の入力です</li>')
-      + `<li>${H ? '右から左' : '下から上'}へ戻る矢印 ＝ 前の機能にもう一度戻るところ（結果を返す、続きを頼むなど）</li>`
-      + `<li>${H ? '横の帯' : '縦の枠'} ＝ 実際のまとまり（動く場所や部品）</li>`
       + '<li>◈ ＝ 外部のサービス（API など）を使っている箱。右のパネルにサービス名と必要な設定が出ます</li>'
       + '<li>スペースを押しながらドラッグ（空いている所なら普通のドラッグ、中ボタンでも可）で移動、ctrl＋ホイールで拡大・縮小。h で初期表示、f で全体を表示、r で図の向き（横・縦）を切り替え</li>'
       + '<li>キー 1・2・3 で表示を切り替え、Esc でここにもどります</li>'
@@ -1374,7 +1206,7 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
   // 帯の見出しが画面の外へ出たら、スプレッドシートの列固定のように画面の端へ貼り付けて出す（文字の大きさは拡大率によらない）
   function updateLaneBar() {
     const frames = [...els.rows.querySelectorAll('.grp.lane')];
-    const H = flowH(), S = els.stage.getBoundingClientRect(), L = els.lanebar.getBoundingClientRect(), W = 152;
+    const H = bandMode(), S = els.stage.getBoundingClientRect(), L = els.lanebar.getBoundingClientRect(), W = 152;
     // 左上の凡例とかぶらないよう、凡例の下から文字をはじめる（位置は貼り付ける層 L から測る）
     const hud = els.legend.parentElement.getBoundingClientRect(), below = Math.max(S.top, hud.bottom + 8) - L.top;
     els.lanebar.replaceChildren(...frames.flatMap((f) => {
@@ -1421,22 +1253,16 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
     els.stage.scrollTop = py * z2 + cam.padY - cy;
   }
   const zoomBy = (f) => zoomTo(cam.z * f);
-  // all=false は初期表示（帯が並ぶ向きを画面に収め、文字が読めるよう 60% より小さくしない。流れの始まりから見せる）、
+  // all=false は初期表示（文字が読めるよう 60% より小さくしない。収まらなければ流れの始まり＝左上から見せる）、
   // all=true は縦横とも収めて真ん中に置く
   function fitView(all) {
     const w = els.canvas.offsetWidth, h = els.canvas.offsetHeight;
     const sw = els.stage.clientWidth, sh = els.stage.clientHeight;
-    if (!all && flowH()) {
-      cam.z = Math.max(0.6, Math.min(1, (sh - 16) / h));
-      applyZoom();
-      els.stage.scrollLeft = cam.padX + Math.min(0, (w * cam.z - sw) / 2);
-      els.stage.scrollTop = cam.padY + Math.min(0, (h * cam.z - sh) / 2);
-      return;
-    }
-    cam.z = Math.max(all ? zMin() : 0.6, Math.min(1, (sw - 16) / w, all ? (sh - 16) / h : 1));
+    cam.z = Math.max(all ? zMin() : 0.6, Math.min(1, (sw - 16) / w, (sh - 16) / h));
     applyZoom();
-    els.stage.scrollLeft = cam.padX + (w * cam.z - sw) / 2;
-    els.stage.scrollTop = all ? cam.padY + (h * cam.z - sh) / 2 : cam.padY;
+    const off = (c, s) => (all ? (c - s) / 2 : Math.min(0, (c - s) / 2));
+    els.stage.scrollLeft = cam.padX + off(w * cam.z, sw);
+    els.stage.scrollTop = cam.padY + off(h * cam.z, sh);
   }
   function home() {
     cam.touched = false;
@@ -1657,25 +1483,32 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
       ctx.closePath();
       ctx.fill();
       if (pls.stroke !== 'none') { ctx.strokeStyle = cc(pls.stroke); ctx.lineWidth = parseFloat(pls.strokeWidth) || 1; ctx.stroke(); }
-      const c = g.querySelector('circle');
-      ctx.fillStyle = cc(getComputedStyle(c).fill);
-      ctx.beginPath();
-      ctx.arc(Number(c.getAttribute('cx')), Number(c.getAttribute('cy')), 2.5, 0, Math.PI * 2);
-      ctx.fill();
+      const port = g.querySelector('rect'), rs = getComputedStyle(port);
+      const pr = ['x', 'y', 'width', 'height'].map((k) => Number(port.getAttribute(k)));
+      ctx.fillStyle = cc(rs.fill);
+      ctx.fillRect(...pr);
+      ctx.strokeStyle = cc(rs.stroke);
+      ctx.lineWidth = parseFloat(rs.strokeWidth) || 1;
+      ctx.strokeRect(...pr);
       ctx.restore();
     }
     // グループの枠と見出し
     for (const grp of els.rows.querySelectorAll('.grp')) {
       const r = loc(grp.getBoundingClientRect()), cs = getComputedStyle(grp);
       fillGradient(grp, r, 0);
-      ctx.strokeStyle = cc(cs.borderTopColor);
+      ctx.strokeStyle = cc(cs.borderRightColor);
       ctx.lineWidth = 1;
-      ctx.setLineDash(cs.borderTopStyle === 'dashed' ? [4, 3] : []);
+      ctx.setLineDash(cs.borderRightStyle === 'dashed' ? [4, 3] : []);
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
       ctx.setLineDash([]);
-      if (cs.borderLeftStyle !== 'dashed') {
+      // 色の付いた太い辺（横の流れの列は上、縦の流れの帯は左）
+      if (cs.borderLeftStyle !== 'dashed' && parseFloat(cs.borderLeftWidth) > 1) {
         ctx.fillStyle = cc(cs.borderLeftColor);
-        ctx.fillRect(r.x, r.y, parseFloat(cs.borderLeftWidth) || 0, r.h);
+        ctx.fillRect(r.x, r.y, parseFloat(cs.borderLeftWidth), r.h);
+      }
+      if (cs.borderTopStyle !== 'dashed' && parseFloat(cs.borderTopWidth) > 1) {
+        ctx.fillStyle = cc(cs.borderTopColor);
+        ctx.fillRect(r.x, r.y, r.w, parseFloat(cs.borderTopWidth));
       }
       drawText(grp.querySelector('.grp-h'));
     }
@@ -1810,7 +1643,8 @@ kbd{padding:0 4px;font-size:11px;color:var(--text);border:1px solid var(--bd-2);
   const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { drawWires(); applyZoom(); }); };
   new ResizeObserver(redraw).observe(els.rows);
   new ResizeObserver(() => applyZoom()).observe(els.stage);
-  document.fonts?.ready.then(() => { drawWires(); if (cam.touched) applyZoom(); else { fitView(false); if (state.sel) reveal(state.sel); } });
+  // 文字の幅が変わるので、線のラベルの幅を測り直して並べ直す
+  document.fonts?.ready.then(() => { labelW.clear(); renderStage(); if (cam.touched) applyZoom(); else { fitView(false); if (state.sel) reveal(state.sel); } });
   if (!reduceMotion) {
     let f = 0;
     setInterval(() => { f = (f + 1) % SPIN.length; for (const s of document.querySelectorAll('.spin')) s.textContent = SPIN[f]; }, 90);
